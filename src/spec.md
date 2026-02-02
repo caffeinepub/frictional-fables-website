@@ -67,9 +67,11 @@ Each book includes:
 - Site navigation links
 
 ### Main Navigation
-- Settings menu item displayed in the main navigation bar only for admin users
-- Settings option accessible exclusively to admin users for comprehensive content management
-- Non-admin users do not see the Settings menu item in navigation
+- **Settings menu item displayed in the main navigation bar only for admin users with proper visibility control**
+- **Settings option accessible exclusively to admin users based on AccessControl.isAdmin authentication check**
+- **Non-admin users and guests do not see the Settings menu item in navigation**
+- **Proper conditional rendering in Header.tsx ensuring Settings link is visible only when user has admin role**
+- **Settings menu item links correctly to SettingsPage.tsx when displayed**
 - Consistent styling with other navigation elements
 
 ### Settings Page (Admin Only) - FULLY DEPLOYED AND OPERATIONAL
@@ -363,11 +365,11 @@ Each book includes:
 ### Authentication & Access Control
 - Admin user authentication system with secure login
 - Role-based access control for all admin features including New Comings management
-- Frontend UI conditional rendering based on user authentication status
-- Backend endpoint protection for all upload and management operations including New Comings
+- **Frontend UI conditional rendering based on user authentication status with proper Settings menu visibility control**
+- **Backend endpoint protection for all upload and management operations including New Comings**
 - Session management for admin users
-- Secure authorization checks for Settings page and all admin functionality
-- Non-admin users cannot access or see admin-only features including New Comings management
+- **Secure authorization checks for Settings page and all admin functionality using AccessControl.isAdmin**
+- **Non-admin users cannot access or see admin-only features including Settings menu item in navigation**
 
 ## Language
 - Application content language: English

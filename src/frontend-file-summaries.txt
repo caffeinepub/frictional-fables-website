@@ -1,7 +1,7 @@
 {
   "frontend/src/App.tsx": "Main application component with TanStack Router setup, defining all routes including the new character note viewer route, and wrapping the app with ThemeProvider and layout components.",
   "frontend/src/hooks/useQueries.ts": "Custom React Query hooks for all backend operations including books, blogs, character notes, new comings (with add, update, delete, and get operations), and site assets management with proper cache invalidation.",
-  "frontend/src/components/Header.tsx": "Responsive navigation header with dynamic logo display, menu items including Settings option visible only to authenticated admin users, authentication button, and mobile menu toggle.",
+  "frontend/src/components/Header.tsx": "Responsive navigation header with dynamic logo display, menu items including Settings option visible only to authenticated admin users (using explicit isAdmin === true check), authentication button, and mobile menu toggle with proper conditional rendering based on admin status.",
   "frontend/src/components/Footer.tsx": "Footer component displaying copyright information with caffeine.ai attribution and Instagram social link for @frictional_fables.",
   "frontend/src/components/ProfileSetupModal.tsx": "Modal dialog that prompts authenticated users to set up their profile name when they first log in (when user role is guest).",
   "frontend/src/pages/HomePage.tsx": "Homepage displaying hero section with dynamic logo in top-right corner fetched via getSiteAssets(), reading quote, featured books, and preview sections for Character Notes, Blogs, and New Comings, all maintaining the cozy book-themed design with responsive positioning.",

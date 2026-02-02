@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useIsCallerAdmin, useGetSiteAssets } from '../hooks/useQueries';
 
 export default function Header() {
@@ -35,18 +35,24 @@ export default function Header() {
     }
   };
 
-  const navItems = [
-    { label: 'Home', path: '/' },
-    { label: 'About', path: '/about' },
-    { label: 'Forum', path: '/forum' },
-    { label: 'Blog', path: '/blog' },
-    { label: 'Suggestions', path: '/suggestions' },
-  ];
+  // Compute navigation items with Settings conditionally included for admin users
+  const navItems = useMemo(() => {
+    const baseItems = [
+      { label: 'Home', path: '/' },
+      { label: 'About', path: '/about' },
+      { label: 'Forum', path: '/forum' },
+      { label: 'Blog', path: '/blog' },
+      { label: 'Suggestions', path: '/suggestions' },
+    ];
 
-  // Add Settings to nav items only if user is authenticated and is admin
-  if (isAuthenticated && !adminLoading && isAdmin) {
-    navItems.push({ label: 'Settings', path: '/settings' });
-  }
+    // Only show Settings menu item if user is authenticated and is admin
+    // isAdmin === true explicitly checks for true value (not undefined or false)
+    if (isAuthenticated && isAdmin === true) {
+      baseItems.push({ label: 'Settings', path: '/settings' });
+    }
+
+    return baseItems;
+  }, [isAuthenticated, isAdmin]);
 
   // Get logo URL from uploaded assets or fallback to default
   const getLogoUrl = () => {
