@@ -3,19 +3,29 @@ import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState, useMemo } from 'react';
-import { useIsCallerAdmin, useGetSiteAssets } from '../hooks/useQueries';
+import { useState } from 'react';
+import { useGetSiteAssets } from '../hooks/useQueries';
 
 export default function Header() {
   const navigate = useNavigate();
   const { login, clear, loginStatus, identity } = useInternetIdentity();
   const queryClient = useQueryClient();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
   const { data: siteAssets } = useGetSiteAssets();
 
   const isAuthenticated = !!identity;
   const disabled = loginStatus === 'logging-in';
+
+  // Navigation items - Settings and Profile are now visible to all users
+  const navItems = [
+    { label: 'Home', path: '/' },
+    { label: 'About', path: '/about' },
+    { label: 'Forum', path: '/forum' },
+    { label: 'Blog', path: '/blog' },
+    { label: 'Suggestions', path: '/suggestions' },
+    { label: 'Profile', path: '/profile' },
+    { label: 'Settings', path: '/settings' },
+  ];
 
   const handleAuth = async () => {
     if (isAuthenticated) {
@@ -34,25 +44,6 @@ export default function Header() {
       }
     }
   };
-
-  // Compute navigation items with Settings conditionally included for admin users
-  const navItems = useMemo(() => {
-    const baseItems = [
-      { label: 'Home', path: '/' },
-      { label: 'About', path: '/about' },
-      { label: 'Forum', path: '/forum' },
-      { label: 'Blog', path: '/blog' },
-      { label: 'Suggestions', path: '/suggestions' },
-    ];
-
-    // Only show Settings menu item if user is authenticated and is admin
-    // isAdmin === true explicitly checks for true value (not undefined or false)
-    if (isAuthenticated && isAdmin === true) {
-      baseItems.push({ label: 'Settings', path: '/settings' });
-    }
-
-    return baseItems;
-  }, [isAuthenticated, isAdmin]);
 
   // Get logo URL from uploaded assets or fallback to default
   const getLogoUrl = () => {

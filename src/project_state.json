@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [
+    "Admin login/access not working: user is not able to enter as admin."
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-update-the-admin-sign-in-ux-so-that-when-admin-authentication-fails-including-authorization-related-backend-traps-the-ui-shows-a-clear-english-error-message-that-helps-the-user-correct-the-issue-without-exposing-any-secret-values",
+      "title": "Update the admin sign-in UX so that when admin authentication fails (including authorization-related backend traps), the UI shows a clear English error message that helps the user correct the issue, without exposing any secret values.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Ensure backend admin authentication works end-to-end so that, after Internet Identity login, submitting the correct admin username and password grants the caller admin permissions and makes `isCurrentSessionAdmin()` return `true` for that principal.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Make backend admin credential checks robust against accidental whitespace differences by trimming the provided `adminName` and `adminPassword` inputs before comparing to the configured admin credentials.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Ensure backend initialization via `_initializeAccessControlWithSecret` does not prevent admin login when the frontend provides an empty or missing `caffeineAdminToken` URL parameter (the admin login flow should work without requiring a secret token).",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Fix admin sign-in so admins can access the dashboard",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

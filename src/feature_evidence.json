@@ -1,0 +1,26 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-update-the-admin-sign-in-ux-so-that-when-admin-authentication-fails-including-authorization-related-backend-traps-the-ui-shows-a-clear-english-error-message-that-helps-the-user-correct-the-issue-without-exposing-any-secret-values",
+      "featureTitle": "Update the admin sign-in UX so that when admin authentication fails (including authorization-related backend traps), the UI shows a clear English error message that helps the user correct the issue, without exposing any secret values.",
+      "files": [
+        "frontend/src/components/AdminSignInPanel.tsx",
+        "frontend/src/utils/errors.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Improve admin sign-in failure UX with clear, safe error messaging",
+  "requirements": [
+    {
+      "id": "REQ-4",
+      "summary": "Show clear, English admin sign-in error messages for invalid credentials vs authorization/initialization failures, without leaking secrets.",
+      "acceptanceCriteria": [
+        "If `adminLogin` fails due to invalid credentials, the UI shows an error like “Invalid admin credentials. Please check your admin name and password.”",
+        "If `adminLogin` fails due to an authorization/initialization issue, the UI shows a distinct error like “Admin sign-in failed due to an authorization issue. Please re-login with Internet Identity and try again.”",
+        "No user-facing text reveals the configured admin username/password or any secret token."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/errors.ts",
+          "operation": "modify",
+          "description": "Add a small helper to classify admin-login failures into (a) invalid credentials vs (b) authorization/initialization-related failures by inspecting thrown errors/messages, returning safe, user-facing strings that do not include any secrets. Use the guidance from the selected \"authorization\" component to handle backend trap/authorization errors gracefully in the UI (Verify the component's usage instructions before implementing.)"
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Adjust `useAdminLogin` so that invalid-credentials failures are represented consistently (e.g., return `false` without throwing), while still surfacing genuine backend trap/authorization errors for the UI to distinguish. Ensure the React Query `isAdmin` cache is only set to true on a successful login result. Use the selected \"authorization\" component guidance on error handling from backend traps (Verify the component's usage instructions before implementing.)"
+        },
+        {
+          "path": "frontend/src/components/AdminSignInPanel.tsx",
+          "operation": "modify",
+          "description": "Update the admin sign-in UI to display a clear inline error (and/or toast) that distinguishes invalid admin credentials from authorization/initialization issues (including backend traps), using the shared error-classification helper. Ensure the message recommends re-logging with Internet Identity for authorization issues and never echoes any sensitive values. Use the selected \"authorization\" component guidance for handling authorization errors gracefully (Verify the component's usage instructions before implementing.)"
+        }
+      ]
+    }
+  ]
+}

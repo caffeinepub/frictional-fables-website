@@ -1,0 +1,90 @@
+{
+  "kind": "build_request",
+  "title": "Fix admin sign-in so admins can access the dashboard",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Ensure backend admin authentication works end-to-end so that, after Internet Identity login, submitting the correct admin username and password grants the caller admin permissions and makes `isCurrentSessionAdmin()` return `true` for that principal.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "recent-messages-3"
+        ],
+        "quotes": [
+          "I am not able to enter as admin.."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Calling `adminLogin(adminName, adminPassword)` with correct credentials returns `true` (and does not trap).",
+        "After a successful `adminLogin`, `isCurrentSessionAdmin()` returns `true` for the same caller principal.",
+        "All admin-gated methods that use `requireAdmin(caller)` (e.g., `uploadLogo`, `addBook`, `uploadBookFile`) succeed for the logged-in admin principal and still reject non-admin principals."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Make backend admin credential checks robust against accidental whitespace differences by trimming the provided `adminName` and `adminPassword` inputs before comparing to the configured admin credentials.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "recent-messages-3"
+        ],
+        "quotes": [
+          "I am not able to enter as admin.."
+        ]
+      },
+      "acceptanceCriteria": [
+        "If the frontend sends credentials with leading/trailing whitespace, the backend still authenticates successfully when the underlying credentials match.",
+        "If credentials are incorrect, `adminLogin` returns `false` (or a consistent non-trapping failure result) and does not grant admin permissions."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Ensure backend initialization via `_initializeAccessControlWithSecret` does not prevent admin login when the frontend provides an empty or missing `caffeineAdminToken` URL parameter (the admin login flow should work without requiring a secret token).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "recent-messages-3"
+        ],
+        "quotes": [
+          "I am not able to enter as admin.."
+        ]
+      },
+      "acceptanceCriteria": [
+        "When `_initializeAccessControlWithSecret(\"\")` (empty string) is called, it does not trap and does not put the canister into a state that blocks subsequent `adminLogin` from granting admin access.",
+        "Admin access can be obtained via `adminLogin` even when the app is loaded without any `caffeineAdminToken` URL parameter."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Update the admin sign-in UX so that when admin authentication fails (including authorization-related backend traps), the UI shows a clear English error message that helps the user correct the issue, without exposing any secret values.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-3"
+        ],
+        "quotes": [
+          "I am not able to enter as admin.."
+        ]
+      },
+      "acceptanceCriteria": [
+        "If `adminLogin` fails due to invalid credentials, the UI shows an error like “Invalid admin credentials. Please check your admin name and password.”",
+        "If `adminLogin` fails due to an authorization/initialization issue, the UI shows a distinct error like “Admin sign-in failed due to an authorization issue. Please re-login with Internet Identity and try again.”",
+        "No user-facing text reveals the configured admin username/password or any secret token."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not edit files in `frontend/src/hooks/useActor.ts` (immutable path).",
+    "Backend must remain single-actor; place all logic changes in `backend/main.mo` and only add `backend/migration.mo` if a state schema upgrade is required."
+  ],
+  "nonGoals": [
+    "Adding new authentication providers (only Internet Identity is supported).",
+    "Replacing hardcoded admin credentials with a new credential management UI.",
+    "Adding real-time admin session syncing across browsers/devices."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

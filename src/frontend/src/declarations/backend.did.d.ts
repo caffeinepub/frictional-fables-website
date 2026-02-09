@@ -27,6 +27,14 @@ export interface BookAsset {
   'fileType' : BookFileType,
   'coverImage' : ExternalBlob,
 }
+export interface BookComment {
+  'userName' : string,
+  'likeCount' : bigint,
+  'commentId' : string,
+  'userId' : Principal,
+  'comment' : string,
+  'timestamp' : bigint,
+}
 export type BookFileType = { 'pdf' : null } |
   { 'wordDoc' : null } |
   { 'wordDocx' : null };
@@ -37,6 +45,12 @@ export interface BookMetadata {
   'coverImage' : ExternalBlob,
   'summary' : string,
   'genre' : string,
+}
+export interface BookRating {
+  'userName' : string,
+  'userId' : Principal,
+  'timestamp' : bigint,
+  'rating' : bigint,
 }
 export interface CharacterNote {
   'id' : string,
@@ -51,6 +65,26 @@ export type CharacterNoteFileType = { 'pdf' : null } |
   { 'video' : null } |
   { 'image' : null };
 export type ExternalBlob = Uint8Array;
+export interface ForumReply {
+  'authorAvatar' : [] | [ExternalBlob],
+  'authorId' : Principal,
+  'authorName' : string,
+  'message' : string,
+  'timestamp' : bigint,
+  'replyId' : string,
+  'threadId' : string,
+}
+export interface ForumThread {
+  'title' : string,
+  'authorAvatar' : [] | [ExternalBlob],
+  'authorId' : Principal,
+  'authorName' : string,
+  'message' : string,
+  'timestamp' : bigint,
+  'replyCount' : bigint,
+  'replies' : Array<ForumReply>,
+  'threadId' : string,
+}
 export interface NewComing {
   'id' : string,
   'title' : string,
@@ -59,11 +93,22 @@ export interface NewComing {
   'image' : ExternalBlob,
   'releaseDate' : [] | [string],
 }
+export interface PublicUserProfile {
+  'name' : string,
+  'profilePicture' : [] | [ExternalBlob],
+}
 export interface SiteAssets {
   'logo' : ExternalBlob,
   'authorPhoto' : ExternalBlob,
 }
-export interface UserProfile { 'name' : string }
+export interface UserProfile {
+  'name' : string,
+  'email' : string,
+  'welcomeMessageShown' : boolean,
+  'gender' : [] | [string],
+  'profilePicture' : [] | [ExternalBlob],
+  'bestReads' : [] | [string],
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -110,6 +155,8 @@ export interface _SERVICE {
     [string, string, string, string, bigint, ExternalBlob],
     undefined
   >,
+  'addBookComment' : ActorMethod<[string, string], undefined>,
+  'addBookRating' : ActorMethod<[string, bigint], undefined>,
   'addCharacterNote' : ActorMethod<
     [
       string,
@@ -126,24 +173,44 @@ export interface _SERVICE {
     [string, string, string, ExternalBlob, [] | [string], bigint],
     undefined
   >,
+  'adminLogin' : ActorMethod<[string, string], boolean>,
+  'adminLogout' : ActorMethod<[], boolean>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'checkProfileComplete' : ActorMethod<[], boolean>,
+  'countRepliesByThread' : ActorMethod<[string], bigint>,
+  'createThread' : ActorMethod<[string, string], undefined>,
   'deleteBlogPost' : ActorMethod<[string], undefined>,
   'deleteBook' : ActorMethod<[string], undefined>,
   'deleteCharacterNote' : ActorMethod<[string], undefined>,
   'deleteNewComing' : ActorMethod<[string], undefined>,
   'getAllBlogPosts' : ActorMethod<[], Array<BlogPost>>,
+  'getAllBooks' : ActorMethod<[], Array<BookMetadata>>,
   'getAllCharacterNotes' : ActorMethod<[], Array<CharacterNote>>,
   'getAllNewComings' : ActorMethod<[], Array<NewComing>>,
+  'getAllThreadsWithReplies' : ActorMethod<[], Array<ForumThread>>,
   'getBlogPost' : ActorMethod<[string], [] | [BlogPost]>,
+  'getBook' : ActorMethod<[string], [] | [BookMetadata]>,
   'getBookAssets' : ActorMethod<[string], [] | [BookAsset]>,
+  'getBookAverageRating' : ActorMethod<[string], [] | [number]>,
+  'getBookComments' : ActorMethod<[string], Array<BookComment>>,
+  'getBookRatings' : ActorMethod<[string], Array<BookRating>>,
   'getBooksInFeaturedOrder' : ActorMethod<[], Array<BookMetadata>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCharacterNote' : ActorMethod<[string], [] | [CharacterNote]>,
+  'getCharacterNotesByBook' : ActorMethod<[string], Array<CharacterNote>>,
+  'getCommentLikeCount' : ActorMethod<[string], bigint>,
   'getNewComing' : ActorMethod<[string], [] | [NewComing]>,
+  'getPublicUserProfile' : ActorMethod<[Principal], [] | [PublicUserProfile]>,
+  'getRepliesByThread' : ActorMethod<[string], Array<ForumReply>>,
+  'getReplyById' : ActorMethod<[string], [] | [ForumReply]>,
   'getSiteAssets' : ActorMethod<[], [] | [SiteAssets]>,
+  'getThreadWithReplies' : ActorMethod<[string], [] | [ForumThread]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isCurrentSessionAdmin' : ActorMethod<[], boolean>,
+  'likeComment' : ActorMethod<[string], undefined>,
+  'replyToThread' : ActorMethod<[string, string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateBlogPost' : ActorMethod<
     [
@@ -176,6 +243,7 @@ export interface _SERVICE {
     [string, string, string, ExternalBlob, [] | [string], bigint],
     undefined
   >,
+  'uploadAuthorPhoto' : ActorMethod<[ExternalBlob], undefined>,
   'uploadBookCover' : ActorMethod<[string, ExternalBlob], undefined>,
   'uploadBookFile' : ActorMethod<
     [string, ExternalBlob, BookFileType],

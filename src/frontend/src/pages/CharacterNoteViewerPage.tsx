@@ -2,16 +2,35 @@ import { useParams, useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronLeft, Tag, Loader2, FileText, Image as ImageIcon, Video } from 'lucide-react';
-import { useGetCharacterNote } from '../hooks/useQueries';
+import { useGetCharacterNote, useGetCallerUserProfile } from '../hooks/useQueries';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useEffect, useState } from 'react';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 
 export default function CharacterNoteViewerPage() {
   const { noteId } = useParams({ from: '/character-note/$noteId' });
   const navigate = useNavigate();
-  const { data: note, isLoading } = useGetCharacterNote(noteId);
+  const { identity } = useInternetIdentity();
+  const { data: userProfile, isLoading: profileLoading } = useGetCallerUserProfile();
+  const { data: note, isLoading, error } = useGetCharacterNote(noteId);
   const [fileUrl, setFileUrl] = useState<string>('');
   const [fileType, setFileType] = useState<string>('');
   const [viewerUrl, setViewerUrl] = useState<string>('');
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const isAuthenticated = !!identity;
+  const hasCompleteProfile = userProfile && userProfile.email && userProfile.email !== '';
+  const needsAuth = !isAuthenticated || !hasCompleteProfile;
+
+  // Check if error is due to incomplete profile
+  const isAuthError = error?.message?.includes('Unauthorized') || error?.message?.includes('complete your profile');
+
+  useEffect(() => {
+    // Show login modal if user needs authentication
+    if (needsAuth && !profileLoading) {
+      setShowLoginModal(true);
+    }
+  }, [needsAuth, profileLoading]);
 
   useEffect(() => {
     if (note?.file && note.fileType) {
@@ -56,11 +75,27 @@ export default function CharacterNoteViewerPage() {
           Back to Home
         </Button>
 
-        {isLoading ? (
+        {isLoading || profileLoading ? (
           <Card className="max-w-4xl mx-auto">
             <CardContent className="text-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
               <p className="text-muted-foreground">Loading character note...</p>
+            </CardContent>
+          </Card>
+        ) : needsAuth || isAuthError ? (
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-3xl font-serif text-center">Login Required</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center py-16">
+              <Tag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <p className="text-xl text-muted-foreground mb-2">Authentication Required</p>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+                Please login and complete your profile to view this character note.
+              </p>
+              <Button onClick={() => setShowLoginModal(true)}>
+                Login to View
+              </Button>
             </CardContent>
           </Card>
         ) : note ? (
@@ -158,6 +193,9 @@ export default function CharacterNoteViewerPage() {
           </Card>
         )}
       </div>
+
+      {/* Login Required Modal */}
+      <LoginRequiredModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </div>
   );
 }

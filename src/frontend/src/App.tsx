@@ -14,6 +14,7 @@ import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import SettingsPage from './pages/SettingsPage';
+import ProfilePage from './pages/ProfilePage';
 import ProfileSetupModal from './components/ProfileSetupModal';
 
 function Layout() {
@@ -99,6 +100,12 @@ const settingsRoute = createRoute({
   component: SettingsPage,
 });
 
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/profile',
+  component: ProfilePage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   aboutRoute,
@@ -111,6 +118,7 @@ const routeTree = rootRoute.addChildren([
   blogPostRoute,
   adminRoute,
   settingsRoute,
+  profileRoute,
 ]);
 
 const router = createRouter({ routeTree });

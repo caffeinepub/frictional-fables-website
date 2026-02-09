@@ -1,67 +1,54 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserRole } from '../hooks/useQueries';
-import { toast } from 'sonner';
+import { useGetCallerUserProfile } from '../hooks/useQueries';
+import { AlertCircle } from 'lucide-react';
 
 export default function ProfileSetupModal() {
+  const navigate = useNavigate();
   const { identity } = useInternetIdentity();
-  const { data: userRole, isLoading: profileLoading, isFetched } = useGetCallerUserRole();
-  const [name, setName] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   const isAuthenticated = !!identity;
-  const needsProfile = userRole === 'guest';
-  const showProfileSetup = isAuthenticated && !profileLoading && isFetched && needsProfile;
+  const needsProfile = userProfile === null || (userProfile !== undefined && (!userProfile.email || userProfile.email === ''));
+  const showProfileSetup = isAuthenticated && !profileLoading && isFetched && needsProfile && !hasRedirected;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      toast.error('Please enter your name');
-      return;
+  // Reset redirect flag when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setHasRedirected(false);
     }
+  }, [isAuthenticated]);
 
-    setIsSubmitting(true);
-    try {
-      // Profile setup is handled by the backend automatically when user interacts
-      toast.success('Welcome to Frictional Fables!');
-      window.location.reload();
-    } catch (error) {
-      console.error('Profile setup error:', error);
-      toast.error('Failed to set up profile. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleGoToProfile = () => {
+    setHasRedirected(true);
+    navigate({ to: '/profile' });
   };
 
   return (
     <Dialog open={showProfileSetup}>
       <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Welcome to Frictional Fables!</DialogTitle>
-          <DialogDescription>
-            Please tell us your name to get started with reading and community features.
+          <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <AlertCircle className="w-6 h-6 text-primary" />
+          </div>
+          <DialogTitle className="text-center">Complete Your Profile</DialogTitle>
+          <DialogDescription className="text-center">
+            Please complete your profile with your name and email to access books, blogs, and character notes.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Your Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              disabled={isSubmitting}
-              autoFocus
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Setting up...' : 'Continue'}
+        <div className="space-y-4 mt-4">
+          <Button 
+            onClick={handleGoToProfile}
+            className="w-full" 
+            size="lg"
+          >
+            Go to Profile
           </Button>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

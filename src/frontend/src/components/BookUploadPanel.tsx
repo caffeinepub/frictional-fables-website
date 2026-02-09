@@ -27,6 +27,7 @@ import {
 } from '../hooks/useQueries';
 import { ExternalBlob, BookMetadata, BookFileType } from '../backend';
 import { toast } from 'sonner';
+import { getErrorMessage, validateBookFile, validateImageFile } from '../utils/errors';
 import { 
   Loader2, 
   Upload, 
@@ -182,6 +183,24 @@ export default function BookUploadPanel() {
       return;
     }
 
+    // Validate cover image if provided
+    if (coverFile) {
+      const coverValidation = validateImageFile(coverFile);
+      if (!coverValidation.valid) {
+        toast.error(coverValidation.error);
+        return;
+      }
+    }
+
+    // Validate book file if provided
+    if (bookFile) {
+      const fileValidation = validateBookFile(bookFile);
+      if (!fileValidation.valid) {
+        toast.error(fileValidation.error);
+        return;
+      }
+    }
+
     try {
       let coverBlob: ExternalBlob;
 
@@ -236,28 +255,40 @@ export default function BookUploadPanel() {
           setFileProgress(percentage);
         });
         const detectedFileType = getFileTypeFromFile(bookFile);
-        await uploadFileMutation.mutateAsync({
-          bookId,
-          file: fileBlob,
-          fileType: detectedFileType,
-        });
-        toast.success('Book file uploaded successfully!');
+        
+        try {
+          await uploadFileMutation.mutateAsync({
+            bookId,
+            file: fileBlob,
+            fileType: detectedFileType,
+          });
+          toast.success('Book file uploaded successfully!');
+        } catch (error) {
+          const errorMsg = getErrorMessage(error);
+          toast.error(errorMsg);
+          // Don't return here - continue with cover upload
+        }
       }
 
       // Upload cover to assets if it's a new file
       if (coverFile) {
-        const coverBytes = new Uint8Array(await coverFile.arrayBuffer());
-        const coverBlobForAssets = ExternalBlob.fromBytes(coverBytes);
-        await uploadCoverMutation.mutateAsync({
-          bookId,
-          image: coverBlobForAssets,
-        });
+        try {
+          const coverBytes = new Uint8Array(await coverFile.arrayBuffer());
+          const coverBlobForAssets = ExternalBlob.fromBytes(coverBytes);
+          await uploadCoverMutation.mutateAsync({
+            bookId,
+            image: coverBlobForAssets,
+          });
+        } catch (error) {
+          const errorMsg = getErrorMessage(error);
+          toast.error(`Cover upload failed: ${errorMsg}`);
+        }
       }
 
       resetForm();
     } catch (error) {
-      console.error('Error saving book:', error);
-      toast.error('Failed to save book');
+      const errorMsg = getErrorMessage(error);
+      toast.error(errorMsg);
     }
   };
 
@@ -273,8 +304,8 @@ export default function BookUploadPanel() {
         resetForm();
       }
     } catch (error) {
-      console.error('Error deleting book:', error);
-      toast.error('Failed to delete book');
+      const errorMsg = getErrorMessage(error);
+      toast.error(errorMsg);
     }
   };
 
@@ -522,11 +553,11 @@ export default function BookUploadPanel() {
               {(addBookMutation.isPending || updateBookMutation.isPending || uploadFileMutation.isPending) ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  {isEditMode ? 'Updating...' : 'Adding...'}
                 </>
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
+                  {isEditMode ? <Save className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
                   {isEditMode ? 'Update Book' : 'Add Book'}
                 </>
               )}
@@ -537,6 +568,7 @@ export default function BookUploadPanel() {
                 variant="outline"
                 size="lg"
               >
+                <X className="mr-2 h-4 w-4" />
                 Cancel
               </Button>
             )}
@@ -544,67 +576,15 @@ export default function BookUploadPanel() {
         </CardContent>
       </Card>
 
-      {/* Live Preview */}
-      {(title || summary || coverPreview) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5" />
-              Live Preview
-            </CardTitle>
-            <CardDescription>
-              How this book will appear in the Featured Books section
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="max-w-sm mx-auto">
-              <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="aspect-[3/4] bg-muted relative overflow-hidden">
-                  {coverPreview ? (
-                    <img
-                      src={coverPreview}
-                      alt={title || 'Book cover'}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <ImageIcon className="h-16 w-16 text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
-                <CardHeader>
-                  <CardTitle className="font-serif">
-                    {title || 'Book Title'}
-                  </CardTitle>
-                  <CardDescription>
-                    {summary || 'Book summary will appear here...'}
-                  </CardDescription>
-                  {genre && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {genre.split(',').map((tag, idx) => (
-                        <Badge key={idx} variant="secondary">
-                          <Tag className="h-3 w-3 mr-1" />
-                          {tag.trim()}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </CardHeader>
-              </Card>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Existing Books List */}
+      {/* Books List */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ArrowUpDown className="h-5 w-5" />
-            Manage Books
+            <BookOpen className="h-5 w-5" />
+            Existing Books
           </CardTitle>
           <CardDescription>
-            Edit, reorder, or delete existing books
+            Manage your book collection. Click edit to modify or delete to remove.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -622,35 +602,33 @@ export default function BookUploadPanel() {
                   <img
                     src={book.coverImage.getDirectURL()}
                     alt={book.title}
-                    className="w-16 h-24 object-cover rounded border"
+                    className="w-16 h-24 object-cover rounded"
                   />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">{book.title}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {book.summary}
-                    </p>
+                    <h3 className="font-semibold text-lg truncate">{book.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{book.summary}</p>
                     <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="secondary" className="text-xs">
+                        <Tag className="h-3 w-3 mr-1" />
+                        {book.genre}
+                      </Badge>
                       <Badge variant="outline" className="text-xs">
+                        <ArrowUpDown className="h-3 w-3 mr-1" />
                         Order: {book.sortOrder.toString()}
                       </Badge>
-                      {book.genre && (
-                        <Badge variant="secondary" className="text-xs">
-                          {book.genre}
-                        </Badge>
-                      )}
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      size="icon"
+                      size="sm"
                       onClick={() => loadBookForEdit(book)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
-                      variant="outline"
-                      size="icon"
+                      variant="destructive"
+                      size="sm"
                       onClick={() => openDeleteDialog(book.id)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -660,9 +638,9 @@ export default function BookUploadPanel() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">No books yet. Add your first book above!</p>
+            <div className="text-center py-8 text-muted-foreground">
+              <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No books yet. Add your first book above!</p>
             </div>
           )}
         </CardContent>
@@ -674,7 +652,7 @@ export default function BookUploadPanel() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the book metadata. The files will remain in storage but won't be displayed.
+              This will permanently delete the book and all its associated data. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -683,7 +661,14 @@ export default function BookUploadPanel() {
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {deleteBookMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

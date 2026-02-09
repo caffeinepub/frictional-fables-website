@@ -11,7 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  useIsCallerAdmin, 
+  useIsAdmin,
+  useAdminLogout,
   useUploadBookFile,
   useUploadBookCover,
   useUploadLogo,
@@ -31,6 +32,7 @@ import {
   useUpdateNewComing,
   useDeleteNewComing,
 } from '../hooks/useQueries';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { ExternalBlob, BookMetadata, BlogPost, CharacterNote, NewComing, BookFileType } from '../backend';
 import { toast } from 'sonner';
 import { 
@@ -50,6 +52,7 @@ import {
   File,
   Sparkles,
   Calendar,
+  LogOut,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -61,10 +64,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import AdminSignInPanel from '../components/AdminSignInPanel';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
+  const { identity } = useInternetIdentity();
+  const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
+  const adminLogoutMutation = useAdminLogout();
   const { data: siteAssets } = useGetSiteAssets();
   const { data: books, isLoading: booksLoading } = useGetFeaturedBooks();
   const { data: blogPosts, isLoading: blogsLoading } = useGetAllBlogPosts();
@@ -84,6 +90,8 @@ export default function SettingsPage() {
   const addNewComingMutation = useAddNewComing();
   const updateNewComingMutation = useUpdateNewComing();
   const deleteNewComingMutation = useDeleteNewComing();
+
+  const isAuthenticated = !!identity;
 
   // Books panel state
   const [bookId, setBookId] = useState('');
@@ -241,6 +249,11 @@ export default function SettingsPage() {
       return file.type === 'application/pdf' ||
              file.type === 'application/msword' ||
              file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    }
+    if (accept === 'image/*,video/*,.pdf') {
+      return file.type.startsWith('image/') || 
+             file.type.startsWith('video/') || 
+             file.type === 'application/pdf';
     }
     return true;
   };
@@ -426,9 +439,9 @@ export default function SettingsPage() {
       }
 
       resetBookForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving book:', error);
-      toast.error('Failed to save book');
+      toast.error(error?.message || 'Failed to save book');
     }
   };
 
@@ -443,9 +456,9 @@ export default function SettingsPage() {
       if (editingBookId === bookToDelete) {
         resetBookForm();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting book:', error);
-      toast.error('Failed to delete book');
+      toast.error(error?.message || 'Failed to delete book');
     }
   };
 
@@ -497,9 +510,9 @@ export default function SettingsPage() {
 
       toast.success('Blog post added successfully!');
       resetBlogForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving blog:', error);
-      toast.error('Failed to save blog post');
+      toast.error(error?.message || 'Failed to save blog post');
     }
   };
 
@@ -511,9 +524,9 @@ export default function SettingsPage() {
       toast.success('Blog post deleted successfully!');
       setDeleteBlogDialogOpen(false);
       setBlogToDelete(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting blog:', error);
-      toast.error('Failed to delete blog post');
+      toast.error(error?.message || 'Failed to delete blog post');
     }
   };
 
@@ -565,9 +578,9 @@ export default function SettingsPage() {
 
       toast.success('Character note added successfully!');
       resetNoteForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving note:', error);
-      toast.error('Failed to save character note');
+      toast.error(error?.message || 'Failed to save character note');
     }
   };
 
@@ -579,9 +592,9 @@ export default function SettingsPage() {
       toast.success('Character note deleted successfully!');
       setDeleteNoteDialogOpen(false);
       setNoteToDelete(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting note:', error);
-      toast.error('Failed to delete character note');
+      toast.error(error?.message || 'Failed to delete character note');
     }
   };
 
@@ -646,9 +659,9 @@ export default function SettingsPage() {
       }
 
       resetComingForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving new coming:', error);
-      toast.error('Failed to save new coming');
+      toast.error(error?.message || 'Failed to save new coming');
     }
   };
 
@@ -663,9 +676,9 @@ export default function SettingsPage() {
       if (editingComingId === comingToDelete) {
         resetComingForm();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting new coming:', error);
-      toast.error('Failed to delete new coming');
+      toast.error(error?.message || 'Failed to delete new coming');
     }
   };
 
@@ -687,9 +700,19 @@ export default function SettingsPage() {
       setLogoFile(null);
       setLogoProgress(0);
       setLogoPreview(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading logo:', error);
-      toast.error('Failed to upload logo');
+      toast.error(error?.message || 'Failed to upload logo');
+    }
+  };
+
+  const handleAdminLogout = async () => {
+    try {
+      await adminLogoutMutation.mutateAsync();
+      toast.success('Admin session ended');
+    } catch (error: any) {
+      console.error('Admin logout error:', error);
+      toast.error(error?.message || 'Failed to sign out');
     }
   };
 
@@ -701,22 +724,39 @@ export default function SettingsPage() {
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-muted-foreground mb-6">You need admin privileges to access this page.</p>
-        <Button onClick={() => navigate({ to: '/' })}>Return Home</Button>
-      </div>
-    );
+  // Show admin sign-in panel if not authenticated or not admin
+  if (!isAuthenticated || !isAdmin) {
+    return <AdminSignInPanel />;
   }
 
+  // Admin view - full content management interface
   return (
     <div className="min-h-screen py-12 bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-serif font-bold mb-2 text-primary">Settings</h1>
-          <p className="text-muted-foreground">Manage your content and site configuration</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-serif font-bold mb-2 text-primary">Settings</h1>
+            <p className="text-muted-foreground">
+              Manage your content and site configuration
+            </p>
+          </div>
+          <Button
+            onClick={handleAdminLogout}
+            variant="outline"
+            disabled={adminLogoutMutation.isPending}
+          >
+            {adminLogoutMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing out...
+              </>
+            ) : (
+              <>
+                <LogOut className="mr-2 h-4 w-4" />
+                Admin Sign Out
+              </>
+            )}
+          </Button>
         </div>
 
         <Alert className="mb-6 border-primary/20 bg-primary/5">

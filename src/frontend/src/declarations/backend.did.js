@@ -43,6 +43,14 @@ export const BlogPost = IDL.Record({
   'description' : IDL.Text,
   'fileType' : IDL.Opt(BlogFileType),
 });
+export const BookMetadata = IDL.Record({
+  'id' : IDL.Text,
+  'title' : IDL.Text,
+  'sortOrder' : IDL.Nat,
+  'coverImage' : ExternalBlob,
+  'summary' : IDL.Text,
+  'genre' : IDL.Text,
+});
 export const CharacterNote = IDL.Record({
   'id' : IDL.Text,
   'previewImage' : IDL.Opt(ExternalBlob),
@@ -60,6 +68,26 @@ export const NewComing = IDL.Record({
   'image' : ExternalBlob,
   'releaseDate' : IDL.Opt(IDL.Text),
 });
+export const ForumReply = IDL.Record({
+  'authorAvatar' : IDL.Opt(ExternalBlob),
+  'authorId' : IDL.Principal,
+  'authorName' : IDL.Text,
+  'message' : IDL.Text,
+  'timestamp' : IDL.Int,
+  'replyId' : IDL.Text,
+  'threadId' : IDL.Text,
+});
+export const ForumThread = IDL.Record({
+  'title' : IDL.Text,
+  'authorAvatar' : IDL.Opt(ExternalBlob),
+  'authorId' : IDL.Principal,
+  'authorName' : IDL.Text,
+  'message' : IDL.Text,
+  'timestamp' : IDL.Int,
+  'replyCount' : IDL.Nat,
+  'replies' : IDL.Vec(ForumReply),
+  'threadId' : IDL.Text,
+});
 export const BookFileType = IDL.Variant({
   'pdf' : IDL.Null,
   'wordDoc' : IDL.Null,
@@ -71,15 +99,32 @@ export const BookAsset = IDL.Record({
   'fileType' : BookFileType,
   'coverImage' : ExternalBlob,
 });
-export const BookMetadata = IDL.Record({
-  'id' : IDL.Text,
-  'title' : IDL.Text,
-  'sortOrder' : IDL.Nat,
-  'coverImage' : ExternalBlob,
-  'summary' : IDL.Text,
-  'genre' : IDL.Text,
+export const BookComment = IDL.Record({
+  'userName' : IDL.Text,
+  'likeCount' : IDL.Nat,
+  'commentId' : IDL.Text,
+  'userId' : IDL.Principal,
+  'comment' : IDL.Text,
+  'timestamp' : IDL.Int,
 });
-export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const BookRating = IDL.Record({
+  'userName' : IDL.Text,
+  'userId' : IDL.Principal,
+  'timestamp' : IDL.Int,
+  'rating' : IDL.Nat,
+});
+export const UserProfile = IDL.Record({
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'welcomeMessageShown' : IDL.Bool,
+  'gender' : IDL.Opt(IDL.Text),
+  'profilePicture' : IDL.Opt(ExternalBlob),
+  'bestReads' : IDL.Opt(IDL.Text),
+});
+export const PublicUserProfile = IDL.Record({
+  'name' : IDL.Text,
+  'profilePicture' : IDL.Opt(ExternalBlob),
+});
 export const SiteAssets = IDL.Record({
   'logo' : ExternalBlob,
   'authorPhoto' : ExternalBlob,
@@ -130,6 +175,8 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'addBookComment' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'addBookRating' : IDL.Func([IDL.Text, IDL.Nat], [], []),
   'addCharacterNote' : IDL.Func(
       [
         IDL.Text,
@@ -148,16 +195,31 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'adminLogin' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
+  'adminLogout' : IDL.Func([], [IDL.Bool], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'checkProfileComplete' : IDL.Func([], [IDL.Bool], ['query']),
+  'countRepliesByThread' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
+  'createThread' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'deleteBlogPost' : IDL.Func([IDL.Text], [], []),
   'deleteBook' : IDL.Func([IDL.Text], [], []),
   'deleteCharacterNote' : IDL.Func([IDL.Text], [], []),
   'deleteNewComing' : IDL.Func([IDL.Text], [], []),
   'getAllBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+  'getAllBooks' : IDL.Func([], [IDL.Vec(BookMetadata)], ['query']),
   'getAllCharacterNotes' : IDL.Func([], [IDL.Vec(CharacterNote)], ['query']),
   'getAllNewComings' : IDL.Func([], [IDL.Vec(NewComing)], ['query']),
+  'getAllThreadsWithReplies' : IDL.Func([], [IDL.Vec(ForumThread)], ['query']),
   'getBlogPost' : IDL.Func([IDL.Text], [IDL.Opt(BlogPost)], ['query']),
+  'getBook' : IDL.Func([IDL.Text], [IDL.Opt(BookMetadata)], ['query']),
   'getBookAssets' : IDL.Func([IDL.Text], [IDL.Opt(BookAsset)], ['query']),
+  'getBookAverageRating' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(IDL.Float64)],
+      ['query'],
+    ),
+  'getBookComments' : IDL.Func([IDL.Text], [IDL.Vec(BookComment)], ['query']),
+  'getBookRatings' : IDL.Func([IDL.Text], [IDL.Vec(BookRating)], ['query']),
   'getBooksInFeaturedOrder' : IDL.Func([], [IDL.Vec(BookMetadata)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
@@ -166,14 +228,35 @@ export const idlService = IDL.Service({
       [IDL.Opt(CharacterNote)],
       ['query'],
     ),
+  'getCharacterNotesByBook' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(CharacterNote)],
+      ['query'],
+    ),
+  'getCommentLikeCount' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
   'getNewComing' : IDL.Func([IDL.Text], [IDL.Opt(NewComing)], ['query']),
+  'getPublicUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(PublicUserProfile)],
+      ['query'],
+    ),
+  'getRepliesByThread' : IDL.Func([IDL.Text], [IDL.Vec(ForumReply)], ['query']),
+  'getReplyById' : IDL.Func([IDL.Text], [IDL.Opt(ForumReply)], ['query']),
   'getSiteAssets' : IDL.Func([], [IDL.Opt(SiteAssets)], ['query']),
+  'getThreadWithReplies' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(ForumThread)],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isCurrentSessionAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'likeComment' : IDL.Func([IDL.Text], [], []),
+  'replyToThread' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'updateBlogPost' : IDL.Func(
       [
@@ -210,6 +293,7 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'uploadAuthorPhoto' : IDL.Func([ExternalBlob], [], []),
   'uploadBookCover' : IDL.Func([IDL.Text, ExternalBlob], [], []),
   'uploadBookFile' : IDL.Func([IDL.Text, ExternalBlob, BookFileType], [], []),
   'uploadLogo' : IDL.Func([ExternalBlob], [], []),
@@ -253,6 +337,14 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Text,
     'fileType' : IDL.Opt(BlogFileType),
   });
+  const BookMetadata = IDL.Record({
+    'id' : IDL.Text,
+    'title' : IDL.Text,
+    'sortOrder' : IDL.Nat,
+    'coverImage' : ExternalBlob,
+    'summary' : IDL.Text,
+    'genre' : IDL.Text,
+  });
   const CharacterNote = IDL.Record({
     'id' : IDL.Text,
     'previewImage' : IDL.Opt(ExternalBlob),
@@ -270,6 +362,26 @@ export const idlFactory = ({ IDL }) => {
     'image' : ExternalBlob,
     'releaseDate' : IDL.Opt(IDL.Text),
   });
+  const ForumReply = IDL.Record({
+    'authorAvatar' : IDL.Opt(ExternalBlob),
+    'authorId' : IDL.Principal,
+    'authorName' : IDL.Text,
+    'message' : IDL.Text,
+    'timestamp' : IDL.Int,
+    'replyId' : IDL.Text,
+    'threadId' : IDL.Text,
+  });
+  const ForumThread = IDL.Record({
+    'title' : IDL.Text,
+    'authorAvatar' : IDL.Opt(ExternalBlob),
+    'authorId' : IDL.Principal,
+    'authorName' : IDL.Text,
+    'message' : IDL.Text,
+    'timestamp' : IDL.Int,
+    'replyCount' : IDL.Nat,
+    'replies' : IDL.Vec(ForumReply),
+    'threadId' : IDL.Text,
+  });
   const BookFileType = IDL.Variant({
     'pdf' : IDL.Null,
     'wordDoc' : IDL.Null,
@@ -281,15 +393,32 @@ export const idlFactory = ({ IDL }) => {
     'fileType' : BookFileType,
     'coverImage' : ExternalBlob,
   });
-  const BookMetadata = IDL.Record({
-    'id' : IDL.Text,
-    'title' : IDL.Text,
-    'sortOrder' : IDL.Nat,
-    'coverImage' : ExternalBlob,
-    'summary' : IDL.Text,
-    'genre' : IDL.Text,
+  const BookComment = IDL.Record({
+    'userName' : IDL.Text,
+    'likeCount' : IDL.Nat,
+    'commentId' : IDL.Text,
+    'userId' : IDL.Principal,
+    'comment' : IDL.Text,
+    'timestamp' : IDL.Int,
   });
-  const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const BookRating = IDL.Record({
+    'userName' : IDL.Text,
+    'userId' : IDL.Principal,
+    'timestamp' : IDL.Int,
+    'rating' : IDL.Nat,
+  });
+  const UserProfile = IDL.Record({
+    'name' : IDL.Text,
+    'email' : IDL.Text,
+    'welcomeMessageShown' : IDL.Bool,
+    'gender' : IDL.Opt(IDL.Text),
+    'profilePicture' : IDL.Opt(ExternalBlob),
+    'bestReads' : IDL.Opt(IDL.Text),
+  });
+  const PublicUserProfile = IDL.Record({
+    'name' : IDL.Text,
+    'profilePicture' : IDL.Opt(ExternalBlob),
+  });
   const SiteAssets = IDL.Record({
     'logo' : ExternalBlob,
     'authorPhoto' : ExternalBlob,
@@ -340,6 +469,8 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'addBookComment' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'addBookRating' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'addCharacterNote' : IDL.Func(
         [
           IDL.Text,
@@ -365,16 +496,35 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'adminLogin' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
+    'adminLogout' : IDL.Func([], [IDL.Bool], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'checkProfileComplete' : IDL.Func([], [IDL.Bool], ['query']),
+    'countRepliesByThread' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
+    'createThread' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'deleteBlogPost' : IDL.Func([IDL.Text], [], []),
     'deleteBook' : IDL.Func([IDL.Text], [], []),
     'deleteCharacterNote' : IDL.Func([IDL.Text], [], []),
     'deleteNewComing' : IDL.Func([IDL.Text], [], []),
     'getAllBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+    'getAllBooks' : IDL.Func([], [IDL.Vec(BookMetadata)], ['query']),
     'getAllCharacterNotes' : IDL.Func([], [IDL.Vec(CharacterNote)], ['query']),
     'getAllNewComings' : IDL.Func([], [IDL.Vec(NewComing)], ['query']),
+    'getAllThreadsWithReplies' : IDL.Func(
+        [],
+        [IDL.Vec(ForumThread)],
+        ['query'],
+      ),
     'getBlogPost' : IDL.Func([IDL.Text], [IDL.Opt(BlogPost)], ['query']),
+    'getBook' : IDL.Func([IDL.Text], [IDL.Opt(BookMetadata)], ['query']),
     'getBookAssets' : IDL.Func([IDL.Text], [IDL.Opt(BookAsset)], ['query']),
+    'getBookAverageRating' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(IDL.Float64)],
+        ['query'],
+      ),
+    'getBookComments' : IDL.Func([IDL.Text], [IDL.Vec(BookComment)], ['query']),
+    'getBookRatings' : IDL.Func([IDL.Text], [IDL.Vec(BookRating)], ['query']),
     'getBooksInFeaturedOrder' : IDL.Func(
         [],
         [IDL.Vec(BookMetadata)],
@@ -387,14 +537,39 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(CharacterNote)],
         ['query'],
       ),
+    'getCharacterNotesByBook' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(CharacterNote)],
+        ['query'],
+      ),
+    'getCommentLikeCount' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
     'getNewComing' : IDL.Func([IDL.Text], [IDL.Opt(NewComing)], ['query']),
+    'getPublicUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(PublicUserProfile)],
+        ['query'],
+      ),
+    'getRepliesByThread' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(ForumReply)],
+        ['query'],
+      ),
+    'getReplyById' : IDL.Func([IDL.Text], [IDL.Opt(ForumReply)], ['query']),
     'getSiteAssets' : IDL.Func([], [IDL.Opt(SiteAssets)], ['query']),
+    'getThreadWithReplies' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ForumThread)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isCurrentSessionAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'likeComment' : IDL.Func([IDL.Text], [], []),
+    'replyToThread' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'updateBlogPost' : IDL.Func(
         [
@@ -438,6 +613,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'uploadAuthorPhoto' : IDL.Func([ExternalBlob], [], []),
     'uploadBookCover' : IDL.Func([IDL.Text, ExternalBlob], [], []),
     'uploadBookFile' : IDL.Func([IDL.Text, ExternalBlob, BookFileType], [], []),
     'uploadLogo' : IDL.Func([ExternalBlob], [], []),

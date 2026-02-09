@@ -8,25 +8,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  useIsCallerAdmin, 
+  useIsAdmin,
+  useAdminLogout,
   useUploadBookFile,
   useUploadBookCover,
   useUploadLogo,
   useGetSiteAssets,
 } from '../hooks/useQueries';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { ExternalBlob, BookFileType } from '../backend';
 import { toast } from 'sonner';
-import { Loader2, Upload, Image as ImageIcon, Settings, FileText, X, AlertCircle, BookPlus } from 'lucide-react';
+import { Loader2, Upload, Image as ImageIcon, Settings, FileText, X, AlertCircle, BookPlus, LogOut } from 'lucide-react';
 import BookUploadPanel from '../components/BookUploadPanel';
+import AdminSignInPanel from '../components/AdminSignInPanel';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
+  const { identity } = useInternetIdentity();
+  const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
+  const adminLogoutMutation = useAdminLogout();
   const { data: siteAssets } = useGetSiteAssets();
 
   const uploadFileMutation = useUploadBookFile();
   const uploadBookCoverMutation = useUploadBookCover();
   const uploadLogoMutation = useUploadLogo();
+
+  const isAuthenticated = !!identity;
 
   // Asset upload state
   const [bookIdForFile, setBookIdForFile] = useState('');
@@ -121,6 +128,16 @@ export default function AdminDashboardPage() {
     return BookFileType.pdf;
   };
 
+  const handleAdminLogout = async () => {
+    try {
+      await adminLogoutMutation.mutateAsync();
+      toast.success('Admin session ended');
+    } catch (error: any) {
+      console.error('Admin logout error:', error);
+      toast.error(error?.message || 'Failed to sign out');
+    }
+  };
+
   if (adminLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -129,14 +146,9 @@ export default function AdminDashboardPage() {
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-muted-foreground mb-6">You need admin privileges to access this page.</p>
-        <Button onClick={() => navigate({ to: '/' })}>Return Home</Button>
-      </div>
-    );
+  // Show admin sign-in panel if not authenticated or not admin
+  if (!isAuthenticated || !isAdmin) {
+    return <AdminSignInPanel />;
   }
 
   const handleUploadBookFile = async () => {
@@ -223,9 +235,28 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen py-16 bg-muted/30">
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-serif font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your content, assets, and site settings</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-serif font-bold mb-2">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage your content, assets, and site settings</p>
+          </div>
+          <Button
+            onClick={handleAdminLogout}
+            variant="outline"
+            disabled={adminLogoutMutation.isPending}
+          >
+            {adminLogoutMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing out...
+              </>
+            ) : (
+              <>
+                <LogOut className="mr-2 h-4 w-4" />
+                Admin Sign Out
+              </>
+            )}
+          </Button>
         </div>
 
         <Alert className="mb-6">
