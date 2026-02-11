@@ -1,21 +1,32 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { UserRole, BookAsset, SiteAssets, BookMetadata, BlogPost, CharacterNote, NewComing, BookFileType, UserProfile, BookComment, BookRating, PublicUserProfile, ForumThread, ForumReply } from '../backend';
+import { useInternetIdentity } from './useInternetIdentity';
+import type { UserRole, BookAsset, SiteAssets, BookMetadata, BlogPost, CharacterNote, NewComing, BookFileType, UserProfile, BookComment, BookRating, PublicUserProfile, ForumThread, ForumReply, Suggestion } from '../backend';
 import { ExternalBlob } from '../backend';
 import type { Principal } from '@icp-sdk/core/principal';
 
 // User Profile
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
+  const { identity } = useInternetIdentity();
 
   const query = useQuery<UserProfile | null>({
     queryKey: ['currentUserProfile'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.getCallerUserProfile();
+      try {
+        return await actor.getCallerUserProfile();
+      } catch (error: any) {
+        // If unauthorized or anonymous, return null instead of throwing
+        if (error?.message?.includes('Unauthorized') || error?.message?.includes('Only users can')) {
+          return null;
+        }
+        throw error;
+      }
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !actorFetching && !!identity,
     retry: false,
+    staleTime: 30000, // Cache for 30 seconds
   });
 
   return {
@@ -716,12 +727,6 @@ export function useGetAllThreads() {
       return actor.getAllThreadsWithReplies();
     },
     enabled: !!actor && !isFetching,
-    retry: (failureCount, error: any) => {
-      if (error?.message?.includes('Unauthorized') || error?.message?.includes('complete your profile')) {
-        return false;
-      }
-      return failureCount < 3;
-    },
   });
 }
 
@@ -735,12 +740,6 @@ export function useGetThread(threadId: string) {
       return actor.getThreadWithReplies(threadId);
     },
     enabled: !!actor && !isFetching && !!threadId,
-    retry: (failureCount, error: any) => {
-      if (error?.message?.includes('Unauthorized') || error?.message?.includes('complete your profile')) {
-        return false;
-      }
-      return failureCount < 3;
-    },
   });
 }
 
@@ -768,9 +767,52 @@ export function useReplyToThread() {
       if (!actor) throw new Error('Actor not available');
       return actor.replyToThread(threadId, message);
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['forumThreads'] });
-      queryClient.invalidateQueries({ queryKey: ['forumThread', variables.threadId] });
+    },
+  });
+}
+
+// Suggestions
+export function useGetSuggestionsFeed() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Suggestion[]>({
+    queryKey: ['suggestions'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getSuggestionsFeed();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateSuggestion() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (message: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.createSuggestion(message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+    },
+  });
+}
+
+export function useUploadAuthorPhoto() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (photo: ExternalBlob) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.uploadAuthorPhoto(photo);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siteAssets'] });
     },
   });
 }

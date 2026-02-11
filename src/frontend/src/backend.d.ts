@@ -28,6 +28,14 @@ export interface BlogPost {
     description: string;
     fileType?: BlogFileType;
 }
+export interface Suggestion {
+    id: string;
+    authorAvatar?: ExternalBlob;
+    authorName: string;
+    author: Principal;
+    message: string;
+    timestamp: bigint;
+}
 export interface ForumReply {
     authorAvatar?: ExternalBlob;
     authorId: Principal;
@@ -46,14 +54,6 @@ export interface CharacterNote {
     bookId: string;
     fileType?: CharacterNoteFileType;
 }
-export interface BookComment {
-    userName: string;
-    likeCount: bigint;
-    commentId: string;
-    userId: Principal;
-    comment: string;
-    timestamp: bigint;
-}
 export interface ForumThread {
     title: string;
     authorAvatar?: ExternalBlob;
@@ -70,6 +70,14 @@ export interface BookRating {
     userId: Principal;
     timestamp: bigint;
     rating: bigint;
+}
+export interface BookComment {
+    userName: string;
+    likeCount: bigint;
+    commentId: string;
+    userId: Principal;
+    comment: string;
+    timestamp: bigint;
 }
 export interface PublicUserProfile {
     name: string;
@@ -130,6 +138,7 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     checkProfileComplete(): Promise<boolean>;
     countRepliesByThread(threadId: string): Promise<bigint>;
+    createSuggestion(message: string): Promise<void>;
     createThread(title: string, message: string): Promise<void>;
     deleteBlogPost(id: string): Promise<void>;
     deleteBook(id: string): Promise<void>;
@@ -157,6 +166,7 @@ export interface backendInterface {
     getRepliesByThread(threadId: string): Promise<Array<ForumReply>>;
     getReplyById(replyId: string): Promise<ForumReply | null>;
     getSiteAssets(): Promise<SiteAssets | null>;
+    getSuggestionsFeed(): Promise<Array<Suggestion>>;
     getThreadWithReplies(threadId: string): Promise<ForumThread | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;

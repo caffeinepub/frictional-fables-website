@@ -10,11 +10,12 @@ import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import UserAvatar from '../components/UserAvatar';
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import { toast } from 'sonner';
+import { formatRelativeTime } from '../utils/time';
 
 export default function ForumPage() {
   const navigate = useNavigate();
   const { identity } = useInternetIdentity();
-  const { data: userProfile, isLoading: profileLoading, isFetched: profileFetched } = useGetCallerUserProfile();
+  const { data: userProfile, isFetched: profileFetched } = useGetCallerUserProfile();
   const { data: threads = [], isLoading: threadsLoading } = useGetAllThreads();
   const createThreadMutation = useCreateThread();
   const replyToThreadMutation = useReplyToThread();
@@ -31,14 +32,8 @@ export default function ForumPage() {
 
   const handleCreateThread = async () => {
     // Check authentication and profile completion
-    if (!isAuthenticated) {
-      setLoginModalMessage('Please Login and complete Profile to post or reply');
-      setShowLoginModal(true);
-      return;
-    }
-
-    if (!hasCompleteProfile) {
-      setLoginModalMessage('Please Login and complete Profile to post or reply');
+    if (!isAuthenticated || !hasCompleteProfile) {
+      setLoginModalMessage('Please login and complete your profile to post or reply');
       setShowLoginModal(true);
       return;
     }
@@ -59,7 +54,7 @@ export default function ForumPage() {
     } catch (error: any) {
       console.error('Error creating thread:', error);
       if (error?.message?.includes('Unauthorized') || error?.message?.includes('complete Profile')) {
-        setLoginModalMessage('Please Login and complete Profile to post or reply');
+        setLoginModalMessage('Please login and complete your profile to post or reply');
         setShowLoginModal(true);
       } else {
         toast.error('Failed to create thread. Please try again.');
@@ -69,14 +64,8 @@ export default function ForumPage() {
 
   const handleReply = async (threadId: string) => {
     // Check authentication and profile completion
-    if (!isAuthenticated) {
-      setLoginModalMessage('Please Login and complete Profile to post or reply');
-      setShowLoginModal(true);
-      return;
-    }
-
-    if (!hasCompleteProfile) {
-      setLoginModalMessage('Please Login and complete Profile to post or reply');
+    if (!isAuthenticated || !hasCompleteProfile) {
+      setLoginModalMessage('Please login and complete your profile to post or reply');
       setShowLoginModal(true);
       return;
     }
@@ -97,27 +86,12 @@ export default function ForumPage() {
     } catch (error: any) {
       console.error('Error posting reply:', error);
       if (error?.message?.includes('Unauthorized') || error?.message?.includes('complete Profile')) {
-        setLoginModalMessage('Please Login and complete Profile to post or reply');
+        setLoginModalMessage('Please login and complete your profile to post or reply');
         setShowLoginModal(true);
       } else {
         toast.error('Failed to post reply. Please try again.');
       }
     }
-  };
-
-  const formatTimestamp = (timestamp: bigint) => {
-    const date = new Date(Number(timestamp) / 1000000);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString();
   };
 
   return (
@@ -180,7 +154,7 @@ export default function ForumPage() {
 
         {/* Threads List */}
         <div className="space-y-6">
-          {threadsLoading || profileLoading ? (
+          {threadsLoading ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground">Loading discussions...</p>
@@ -213,7 +187,7 @@ export default function ForumPage() {
                         <span>•</span>
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {formatTimestamp(thread.timestamp)}
+                          {formatRelativeTime(thread.timestamp)}
                         </div>
                         <span>•</span>
                         <div className="flex items-center gap-1">
@@ -249,7 +223,7 @@ export default function ForumPage() {
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-sm font-medium">{reply.authorName}</span>
                               <span className="text-xs text-muted-foreground">
-                                {formatTimestamp(reply.timestamp)}
+                                {formatRelativeTime(reply.timestamp)}
                               </span>
                             </div>
                             <p className="text-sm text-foreground font-serif whitespace-pre-wrap">
@@ -265,21 +239,18 @@ export default function ForumPage() {
                   <div className="mt-6 pt-6 border-t border-border/50">
                     {!canPost && profileFetched && (
                       <div className="bg-muted/50 border border-border rounded-lg p-3 text-sm text-muted-foreground mb-3">
-                        <p>Please login and complete your profile to post replies.</p>
+                        <p>Login and complete your profile to reply</p>
                       </div>
                     )}
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                       <Textarea
                         placeholder="Write a reply..."
                         value={replyMessages[thread.threadId] || ''}
                         onChange={(e) =>
-                          setReplyMessages({
-                            ...replyMessages,
-                            [thread.threadId]: e.target.value,
-                          })
+                          setReplyMessages({ ...replyMessages, [thread.threadId]: e.target.value })
                         }
                         rows={2}
-                        className="font-serif resize-none"
+                        className="font-serif resize-none flex-1"
                         disabled={replyToThreadMutation.isPending || !canPost}
                       />
                       <Button

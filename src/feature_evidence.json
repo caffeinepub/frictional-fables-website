@@ -2,11 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-admin-sign-in-ux-so-that-when-admin-authentication-fails-including-authorization-related-backend-traps-the-ui-shows-a-clear-english-error-message-that-helps-the-user-correct-the-issue-without-exposing-any-secret-values",
-      "featureTitle": "Update the admin sign-in UX so that when admin authentication fails (including authorization-related backend traps), the UI shows a clear English error message that helps the user correct the issue, without exposing any secret values.",
+      "featureId": "feature-adjust-frontend-data-fetching-so-viewing-suggestions-and-forum-content-does-not-depend-on-a-successful-profile-fetch-the-app-must-render-the-suggestions-feed-and-forum-threads-for-logged-out-visitors-without-showing-a-blocking-login-profile-modal-while-still-requiring-login-complete-profile-only-for-posting-actions",
+      "featureTitle": "Adjust frontend data fetching so viewing Suggestions and Forum content does not depend on a successful profile fetch. The app must render the Suggestions feed and Forum threads for logged-out visitors without showing a blocking login/profile modal, while still requiring login+complete profile only for posting actions.",
       "files": [
-        "frontend/src/components/AdminSignInPanel.tsx",
-        "frontend/src/utils/errors.ts"
+        "frontend/src/pages/ForumPage.tsx",
+        "frontend/src/pages/SuggestionsPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,7 +18,28 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-4"
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-make-the-frontend-profile-query-used-across-the-app-resilient-for-logged-out-visitors-by-treating-authorization-failures-as-an-unauthenticated-state-returning-null-disabled-query-rather-than-a-hard-failure-that-blocks-public-pages",
+      "featureTitle": "Make the frontend profile query used across the app resilient for logged-out visitors by treating authorization failures as an unauthenticated state (returning null/disabled query) rather than a hard failure that blocks public pages.",
+      "files": [
+        "frontend/src/components/ProfileSetupModal.tsx",
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
       ],
       "confidence": "high"
     }

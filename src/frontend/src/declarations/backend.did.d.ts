@@ -101,6 +101,14 @@ export interface SiteAssets {
   'logo' : ExternalBlob,
   'authorPhoto' : ExternalBlob,
 }
+export interface Suggestion {
+  'id' : string,
+  'authorAvatar' : [] | [ExternalBlob],
+  'authorName' : string,
+  'author' : Principal,
+  'message' : string,
+  'timestamp' : bigint,
+}
 export interface UserProfile {
   'name' : string,
   'email' : string,
@@ -178,6 +186,7 @@ export interface _SERVICE {
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'checkProfileComplete' : ActorMethod<[], boolean>,
   'countRepliesByThread' : ActorMethod<[string], bigint>,
+  'createSuggestion' : ActorMethod<[string], undefined>,
   'createThread' : ActorMethod<[string, string], undefined>,
   'deleteBlogPost' : ActorMethod<[string], undefined>,
   'deleteBook' : ActorMethod<[string], undefined>,
@@ -205,6 +214,7 @@ export interface _SERVICE {
   'getRepliesByThread' : ActorMethod<[string], Array<ForumReply>>,
   'getReplyById' : ActorMethod<[string], [] | [ForumReply]>,
   'getSiteAssets' : ActorMethod<[], [] | [SiteAssets]>,
+  'getSuggestionsFeed' : ActorMethod<[], Array<Suggestion>>,
   'getThreadWithReplies' : ActorMethod<[string], [] | [ForumThread]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,

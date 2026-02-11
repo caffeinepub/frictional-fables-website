@@ -13,8 +13,8 @@ export default function ProfileSetupModal() {
   const [hasRedirected, setHasRedirected] = useState(false);
 
   const isAuthenticated = !!identity;
-  const needsProfile = userProfile === null || (userProfile !== undefined && (!userProfile.email || userProfile.email === ''));
-  const showProfileSetup = isAuthenticated && !profileLoading && isFetched && needsProfile && !hasRedirected;
+  const needsProfile = isAuthenticated && isFetched && (userProfile === null || (userProfile !== undefined && (!userProfile.email || userProfile.email === '')));
+  const showProfileSetup = needsProfile && !profileLoading && !hasRedirected;
 
   // Reset redirect flag when user logs out
   useEffect(() => {

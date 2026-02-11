@@ -1,61 +1,63 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T21:16:53.408Z",
+  "generatedAt": "2026-02-11T07:21:43.690Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 1,
+    "total": 3,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Ensure backend admin authentication works end-to-end so that, after Internet Identity login, submitting the correct admin username and password grants the caller admin permissions and makes `isCurrentSessionAdmin()` return `true` for that principal.",
+        "summary": "Update backend access control so Suggestions feed and Forum threads (including replies) can be read by anonymous users and by logged-in users with incomplete profiles, while keeping write actions (create suggestion, create thread, reply) restricted to authenticated users with a complete profile.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Make backend admin credential checks robust against accidental whitespace differences by trimming the provided `adminName` and `adminPassword` inputs before comparing to the configured admin credentials.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Adjust frontend data fetching so viewing Suggestions and Forum content does not depend on a successful profile fetch. The app must render the Suggestions feed and Forum threads for logged-out visitors without showing a blocking login/profile modal, while still requiring login+complete profile only for posting actions.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/SuggestionsPage.tsx",
+          "frontend/src/pages/ForumPage.tsx",
+          "frontend/src/components/LoginRequiredModal.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/SuggestionsPage.tsx",
+          "frontend/src/pages/ForumPage.tsx"
+        ]
       },
       {
         "id": "REQ-3",
-        "summary": "Ensure backend initialization via `_initializeAccessControlWithSecret` does not prevent admin login when the frontend provides an empty or missing `caffeineAdminToken` URL parameter (the admin login flow should work without requiring a secret token).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Update the admin sign-in UX so that when admin authentication fails (including authorization-related backend traps), the UI shows a clear English error message that helps the user correct the issue, without exposing any secret values.",
+        "summary": "Make the frontend profile query used across the app resilient for logged-out visitors by treating authorization failures as an unauthenticated state (returning null/disabled query) rather than a hard failure that blocks public pages.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/errors.ts",
           "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/AdminSignInPanel.tsx"
+          "frontend/src/components/ProfileSetupModal.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/errors.ts",
-          "frontend/src/components/AdminSignInPanel.tsx"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/ProfileSetupModal.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/AdminSignInPanel.tsx",
-    "frontend/src/utils/errors.ts",
+    "frontend/src/components/BookComments.tsx",
+    "frontend/src/components/ProfileSetupModal.tsx",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/ForumPage.tsx",
+    "frontend/src/pages/SuggestionsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

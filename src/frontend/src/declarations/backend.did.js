@@ -129,6 +129,14 @@ export const SiteAssets = IDL.Record({
   'logo' : ExternalBlob,
   'authorPhoto' : ExternalBlob,
 });
+export const Suggestion = IDL.Record({
+  'id' : IDL.Text,
+  'authorAvatar' : IDL.Opt(ExternalBlob),
+  'authorName' : IDL.Text,
+  'author' : IDL.Principal,
+  'message' : IDL.Text,
+  'timestamp' : IDL.Int,
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -200,6 +208,7 @@ export const idlService = IDL.Service({
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'checkProfileComplete' : IDL.Func([], [IDL.Bool], ['query']),
   'countRepliesByThread' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
+  'createSuggestion' : IDL.Func([IDL.Text], [], []),
   'createThread' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'deleteBlogPost' : IDL.Func([IDL.Text], [], []),
   'deleteBook' : IDL.Func([IDL.Text], [], []),
@@ -209,7 +218,7 @@ export const idlService = IDL.Service({
   'getAllBooks' : IDL.Func([], [IDL.Vec(BookMetadata)], ['query']),
   'getAllCharacterNotes' : IDL.Func([], [IDL.Vec(CharacterNote)], ['query']),
   'getAllNewComings' : IDL.Func([], [IDL.Vec(NewComing)], ['query']),
-  'getAllThreadsWithReplies' : IDL.Func([], [IDL.Vec(ForumThread)], ['query']),
+  'getAllThreadsWithReplies' : IDL.Func([], [IDL.Vec(ForumThread)], []),
   'getBlogPost' : IDL.Func([IDL.Text], [IDL.Opt(BlogPost)], ['query']),
   'getBook' : IDL.Func([IDL.Text], [IDL.Opt(BookMetadata)], ['query']),
   'getBookAssets' : IDL.Func([IDL.Text], [IDL.Opt(BookAsset)], ['query']),
@@ -240,14 +249,11 @@ export const idlService = IDL.Service({
       [IDL.Opt(PublicUserProfile)],
       ['query'],
     ),
-  'getRepliesByThread' : IDL.Func([IDL.Text], [IDL.Vec(ForumReply)], ['query']),
+  'getRepliesByThread' : IDL.Func([IDL.Text], [IDL.Vec(ForumReply)], []),
   'getReplyById' : IDL.Func([IDL.Text], [IDL.Opt(ForumReply)], ['query']),
   'getSiteAssets' : IDL.Func([], [IDL.Opt(SiteAssets)], ['query']),
-  'getThreadWithReplies' : IDL.Func(
-      [IDL.Text],
-      [IDL.Opt(ForumThread)],
-      ['query'],
-    ),
+  'getSuggestionsFeed' : IDL.Func([], [IDL.Vec(Suggestion)], []),
+  'getThreadWithReplies' : IDL.Func([IDL.Text], [IDL.Opt(ForumThread)], []),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -423,6 +429,14 @@ export const idlFactory = ({ IDL }) => {
     'logo' : ExternalBlob,
     'authorPhoto' : ExternalBlob,
   });
+  const Suggestion = IDL.Record({
+    'id' : IDL.Text,
+    'authorAvatar' : IDL.Opt(ExternalBlob),
+    'authorName' : IDL.Text,
+    'author' : IDL.Principal,
+    'message' : IDL.Text,
+    'timestamp' : IDL.Int,
+  });
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -501,6 +515,7 @@ export const idlFactory = ({ IDL }) => {
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'checkProfileComplete' : IDL.Func([], [IDL.Bool], ['query']),
     'countRepliesByThread' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
+    'createSuggestion' : IDL.Func([IDL.Text], [], []),
     'createThread' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'deleteBlogPost' : IDL.Func([IDL.Text], [], []),
     'deleteBook' : IDL.Func([IDL.Text], [], []),
@@ -510,11 +525,7 @@ export const idlFactory = ({ IDL }) => {
     'getAllBooks' : IDL.Func([], [IDL.Vec(BookMetadata)], ['query']),
     'getAllCharacterNotes' : IDL.Func([], [IDL.Vec(CharacterNote)], ['query']),
     'getAllNewComings' : IDL.Func([], [IDL.Vec(NewComing)], ['query']),
-    'getAllThreadsWithReplies' : IDL.Func(
-        [],
-        [IDL.Vec(ForumThread)],
-        ['query'],
-      ),
+    'getAllThreadsWithReplies' : IDL.Func([], [IDL.Vec(ForumThread)], []),
     'getBlogPost' : IDL.Func([IDL.Text], [IDL.Opt(BlogPost)], ['query']),
     'getBook' : IDL.Func([IDL.Text], [IDL.Opt(BookMetadata)], ['query']),
     'getBookAssets' : IDL.Func([IDL.Text], [IDL.Opt(BookAsset)], ['query']),
@@ -549,18 +560,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(PublicUserProfile)],
         ['query'],
       ),
-    'getRepliesByThread' : IDL.Func(
-        [IDL.Text],
-        [IDL.Vec(ForumReply)],
-        ['query'],
-      ),
+    'getRepliesByThread' : IDL.Func([IDL.Text], [IDL.Vec(ForumReply)], []),
     'getReplyById' : IDL.Func([IDL.Text], [IDL.Opt(ForumReply)], ['query']),
     'getSiteAssets' : IDL.Func([], [IDL.Opt(SiteAssets)], ['query']),
-    'getThreadWithReplies' : IDL.Func(
-        [IDL.Text],
-        [IDL.Opt(ForumThread)],
-        ['query'],
-      ),
+    'getSuggestionsFeed' : IDL.Func([], [IDL.Vec(Suggestion)], []),
+    'getThreadWithReplies' : IDL.Func([IDL.Text], [IDL.Opt(ForumThread)], []),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],

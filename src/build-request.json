@@ -1,90 +1,89 @@
 {
   "kind": "build_request",
-  "title": "Fix admin sign-in so admins can access the dashboard",
+  "title": "Allow anonymous read access to Suggestions and Forum content",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Ensure backend admin authentication works end-to-end so that, after Internet Identity login, submitting the correct admin username and password grants the caller admin permissions and makes `isCurrentSessionAdmin()` return `true` for that principal.",
+      "text": "Update backend access control so Suggestions feed and Forum threads (including replies) can be read by anonymous users and by logged-in users with incomplete profiles, while keeping write actions (create suggestion, create thread, reply) restricted to authenticated users with a complete profile.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "recent-messages-3"
+          "recent-messages-6"
         ],
         "quotes": [
-          "I am not able to enter as admin.."
+          "Yes make it readable"
         ]
       },
       "acceptanceCriteria": [
-        "Calling `adminLogin(adminName, adminPassword)` with correct credentials returns `true` (and does not trap).",
-        "After a successful `adminLogin`, `isCurrentSessionAdmin()` returns `true` for the same caller principal.",
-        "All admin-gated methods that use `requireAdmin(caller)` (e.g., `uploadLogo`, `addBook`, `uploadBookFile`) succeed for the logged-in admin principal and still reject non-admin principals."
+        "When the caller is anonymous, backend query methods used to fetch the Suggestions feed return data instead of trapping with an Unauthorized/complete-profile error.",
+        "When the caller is anonymous, backend query methods used to fetch Forum threads and embedded replies return data instead of trapping with an Unauthorized/complete-profile error.",
+        "Backend write methods for suggestions/threads/replies continue to reject anonymous callers and callers without complete profiles with a clear Unauthorized/complete-profile error message.",
+        "No existing stored data (suggestions, threads, replies) is lost after deployment."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Make backend admin credential checks robust against accidental whitespace differences by trimming the provided `adminName` and `adminPassword` inputs before comparing to the configured admin credentials.",
-      "target": "backend",
+      "text": "Adjust frontend data fetching so viewing Suggestions and Forum content does not depend on a successful profile fetch. The app must render the Suggestions feed and Forum threads for logged-out visitors without showing a blocking login/profile modal, while still requiring login+complete profile only for posting actions.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages-3"
+          "recent-messages-6"
         ],
         "quotes": [
-          "I am not able to enter as admin.."
+          "Yes make it readable"
         ]
       },
       "acceptanceCriteria": [
-        "If the frontend sends credentials with leading/trailing whitespace, the backend still authenticates successfully when the underlying credentials match.",
-        "If credentials are incorrect, `adminLogin` returns `false` (or a consistent non-trapping failure result) and does not grant admin permissions."
+        "Opening the Suggestions page while logged out shows the community suggestions list (or an empty state) without requiring login.",
+        "Opening the Forum page while logged out shows the threads list (or an empty state) without requiring login.",
+        "On both pages, attempting to submit a suggestion, create a thread, or post a reply while logged out (or with an incomplete profile) opens the existing LoginRequiredModal and prevents submission.",
+        "The loading state on Suggestions/Forum pages does not stay stuck due to a failed/disabled profile query when the user is logged out."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Ensure backend initialization via `_initializeAccessControlWithSecret` does not prevent admin login when the frontend provides an empty or missing `caffeineAdminToken` URL parameter (the admin login flow should work without requiring a secret token).",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "recent-messages-3"
-        ],
-        "quotes": [
-          "I am not able to enter as admin.."
-        ]
-      },
-      "acceptanceCriteria": [
-        "When `_initializeAccessControlWithSecret(\"\")` (empty string) is called, it does not trap and does not put the canister into a state that blocks subsequent `adminLogin` from granting admin access.",
-        "Admin access can be obtained via `adminLogin` even when the app is loaded without any `caffeineAdminToken` URL parameter."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Update the admin sign-in UX so that when admin authentication fails (including authorization-related backend traps), the UI shows a clear English error message that helps the user correct the issue, without exposing any secret values.",
+      "text": "Make the frontend profile query used across the app resilient for logged-out visitors by treating authorization failures as an unauthenticated state (returning null/disabled query) rather than a hard failure that blocks public pages.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages-3"
+          "recent-messages-6"
         ],
         "quotes": [
-          "I am not able to enter as admin.."
+          "Yes make it readable"
         ]
       },
       "acceptanceCriteria": [
-        "If `adminLogin` fails due to invalid credentials, the UI shows an error like “Invalid admin credentials. Please check your admin name and password.”",
-        "If `adminLogin` fails due to an authorization/initialization issue, the UI shows a distinct error like “Admin sign-in failed due to an authorization issue. Please re-login with Internet Identity and try again.”",
-        "No user-facing text reveals the configured admin username/password or any secret token."
+        "When the user is logged out, the profile query does not spam retries/toasts and does not block rendering of public-readable pages (Suggestions/Forum).",
+        "When the user logs in, the profile query refetches and correctly reports whether the profile is complete for gating posting actions.",
+        "No changes are required to immutable hook files (useInternetIdentity/useActor), and the solution is implemented via editable hooks/pages (e.g., useQueries and the pages)."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files in `frontend/src/hooks/useActor.ts` (immutable path).",
-    "Backend must remain single-actor; place all logic changes in `backend/main.mo` and only add `backend/migration.mo` if a state schema upgrade is required."
+    "Backend must remain a single Motoko actor in backend/main.mo; add backend/migration.mo only if a state layout change is strictly necessary.",
+    "Do not edit files under frontend/src/components/ui or any path listed in frontend.immutablePaths.",
+    "Use English for all user-facing text."
   ],
   "nonGoals": [
-    "Adding new authentication providers (only Internet Identity is supported).",
-    "Replacing hardcoded admin credentials with a new credential management UI.",
-    "Adding real-time admin session syncing across browsers/devices."
+    "Making books, blog posts, character notes, or book assets publicly readable without login/profile (only Suggestions and Forum read access are in scope).",
+    "Adding third-party authentication or any non-Internet-Identity auth provider.",
+    "Introducing real-time updates via WebSockets."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [
+      "Allow Suggestions and Forum content to be readable without requiring login or a completed profile (anonymous read access)."
+    ],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

@@ -5,13 +5,12 @@ import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
 import Text "mo:core/Text";
+import Iter "mo:core/Iter";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   // Initialize the access control system
   let accessControlState = AccessControl.initState();
@@ -163,6 +162,16 @@ actor {
     isRead : Bool;
   };
 
+  // New suggestion type
+  public type Suggestion = {
+    id : Text;
+    author : Principal;
+    authorName : Text;
+    authorAvatar : ?Storage.ExternalBlob;
+    message : Text;
+    timestamp : Int;
+  };
+
   var siteAssets : ?SiteAssets = null;
 
   let books = Map.empty<Text, BookMetadata>();
@@ -177,6 +186,7 @@ actor {
   let forumReplies = Map.empty<Text, ForumReply>();
   let commentLikes = Map.empty<Text, [CommentLike]>();
   let adminNotifications = Map.empty<Text, AdminNotification>();
+  let suggestions = Map.empty<Text, Suggestion>();
 
   func hasCompleteProfile(caller : Principal) : Bool {
     if (caller.isAnonymous()) {
@@ -1085,7 +1095,8 @@ actor {
     };
   };
 
-  public query func getAllThreadsWithReplies() : async [ForumThread] {
+  // Forum feed (open to all)
+  public func getAllThreadsWithReplies() : async [ForumThread] {
     let allThreads = forumThreads.values().toArray();
 
     allThreads.sort(
@@ -1095,11 +1106,13 @@ actor {
     );
   };
 
-  public query func getThreadWithReplies(threadId : Text) : async ?ForumThread {
+  // Get thread + replies (open to all)
+  public func getThreadWithReplies(threadId : Text) : async ?ForumThread {
     forumThreads.get(threadId);
   };
 
-  public query func getRepliesByThread(threadId : Text) : async [ForumReply] {
+  // Get thread replies (open to all)
+  public func getRepliesByThread(threadId : Text) : async [ForumReply] {
     if (threadId == "") {
       Runtime.trap("Thread ID is required");
     };
@@ -1112,11 +1125,14 @@ actor {
     };
   };
 
-  public query func getReplyById(replyId : Text) : async ?ForumReply {
+  public query ({ caller }) func getReplyById(replyId : Text) : async ?ForumReply {
+    requireCompleteProfile(caller);
     forumReplies.get(replyId);
   };
 
-  public query func countRepliesByThread(threadId : Text) : async Nat {
+  public query ({ caller }) func countRepliesByThread(threadId : Text) : async Nat {
+    requireCompleteProfile(caller);
+
     if (threadId == "") {
       Runtime.trap("Thread ID is required");
     };
@@ -1158,5 +1174,45 @@ actor {
       return true;
     };
     false;
+  };
+
+  // New createSuggestion function
+  public shared ({ caller }) func createSuggestion(message : Text) : async () {
+    requireCompleteProfile(caller);
+
+    if (message == "") {
+      Runtime.trap("Suggestion message cannot be empty");
+    };
+
+    let userProfile = switch (userProfiles.get(caller)) {
+      case (?profile) { profile };
+      case (null) {
+        Runtime.trap("User profile not found");
+      };
+    };
+
+    let suggestionId = Time.now().toText();
+
+    let newSuggestion : Suggestion = {
+      id = suggestionId;
+      author = caller;
+      authorName = userProfile.name;
+      authorAvatar = userProfile.profilePicture;
+      message;
+      timestamp = Time.now();
+    };
+
+    suggestions.add(suggestionId, newSuggestion);
+  };
+
+  // Suggestions feed (open to all)
+  public func getSuggestionsFeed() : async [Suggestion] {
+    let allSuggestions = suggestions.values().toArray();
+
+    allSuggestions.sort(
+      func(a, b) {
+        Nat.compare(b.timestamp.toNat(), a.timestamp.toNat());
+      }
+    );
   };
 };

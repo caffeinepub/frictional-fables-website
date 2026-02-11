@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix admin sign-in so admins can reliably authenticate and access the admin dashboard after Internet Identity login.
+**Goal:** Allow logged-out visitors (and logged-in users with incomplete profiles) to read Suggestions and Forum content, while keeping posting actions restricted to authenticated users with complete profiles.
 
 **Planned changes:**
-- Update backend admin authentication to work end-to-end: successful `adminLogin(adminName, adminPassword)` grants admin permissions for the caller principal so `isCurrentSessionAdmin()` returns `true`.
-- Trim leading/trailing whitespace from `adminName` and `adminPassword` in the backend before validating credentials.
-- Adjust backend initialization `_initializeAccessControlWithSecret` to not trap or block admin login when the app is loaded without a `caffeineAdminToken` URL parameter (empty/missing token).
-- Improve the admin sign-in UI to show clear, non-secret-revealing error messages for invalid credentials vs authorization/initialization failures (including backend traps).
+- Update backend access control to allow anonymous/incomplete-profile read queries for the Suggestions feed and Forum threads (including replies), while keeping create/thread/reply actions gated behind authentication + complete profile.
+- Adjust frontend Suggestions and Forum pages so they can fetch and render content without depending on a successful profile fetch (no blocking login/profile modal for reading).
+- Make the shared frontend profile query resilient when logged out by treating authorization failures as an unauthenticated state (non-blocking), while still refetching on login to gate posting actions.
 
-**User-visible outcome:** Admins can sign in with Internet Identity, enter admin credentials successfully to access admin-only actions, and see clear guidance when admin sign-in fails.
+**User-visible outcome:** Visitors can browse Suggestions and Forum threads/replies while logged out; attempting to submit a suggestion, create a thread, or reply still requires logging in and having a complete profile.
