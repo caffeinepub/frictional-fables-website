@@ -10,26 +10,25 @@ import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import Migration "migration";
 
+// Apply data migration for upgrade persistence.
+(with migration = Migration.run)
 actor {
-  // Initialize the access control system
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
-  // Hardcoded admin credentials (should be securely stored in a production system).
   let adminUsername = "Kriti 1";
   let adminPassword = "19.11.2024 Deepika";
   var isAdminSessionActive = false;
   var lastAdminSessionPrincipal : ?Principal = null;
   var accessControlInitialized = false;
 
-  // Helper function to check if caller has active admin session
   func isCallerAdminSession(caller : Principal) : Bool {
     isAdminSessionActive and lastAdminSessionPrincipal == ?caller;
   };
 
-  // Helper function to require admin permission using AccessControl
   func requireAdmin(caller : Principal) {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
@@ -1216,3 +1215,4 @@ actor {
     );
   };
 };
+

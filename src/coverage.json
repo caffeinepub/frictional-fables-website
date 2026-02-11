@@ -1,63 +1,41 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T07:21:43.690Z",
+  "generatedAt": "2026-02-11T22:44:39.038Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 2,
+    "total": 2,
+    "implemented": 0,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Update backend access control so Suggestions feed and Forum threads (including replies) can be read by anonymous users and by logged-in users with incomplete profiles, while keeping write actions (create suggestion, create thread, reply) restricted to authenticated users with a complete profile.",
+        "summary": "Ensure all user-generated and admin-managed data is preserved across normal canister upgrades/redeploys (i.e., code updates) so uploaded books and associated metadata are not removed after an upgrade.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Adjust frontend data fetching so viewing Suggestions and Forum content does not depend on a successful profile fetch. The app must render the Suggestions feed and Forum threads for logged-out visitors without showing a blocking login/profile modal, while still requiring login+complete profile only for posting actions.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/SuggestionsPage.tsx",
-          "frontend/src/pages/ForumPage.tsx",
-          "frontend/src/components/LoginRequiredModal.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/SuggestionsPage.tsx",
-          "frontend/src/pages/ForumPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Make the frontend profile query used across the app resilient for logged-out visitors by treating authorization failures as an unauthenticated state (returning null/disabled query) rather than a hard failure that blocks public pages.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/ProfileSetupModal.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/ProfileSetupModal.tsx"
-        ]
+        "summary": "Persist user profiles across normal canister upgrades/redeploys so profiles that users create remain saved and can be accessed by admin workflows after upgrades.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/BookComments.tsx",
-    "frontend/src/components/ProfileSetupModal.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/ForumPage.tsx",
-    "frontend/src/pages/SuggestionsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

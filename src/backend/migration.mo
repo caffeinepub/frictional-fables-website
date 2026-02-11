@@ -1,11 +1,17 @@
 import Map "mo:core/Map";
-import Text "mo:core/Text";
-import Nat "mo:core/Nat";
-import Array "mo:core/Array";
 import Principal "mo:core/Principal";
 import Storage "blob-storage/Storage";
 
 module {
+  type SiteAssets = {
+    authorPhoto : Storage.ExternalBlob;
+    logo : Storage.ExternalBlob;
+  };
+
+  type BookFileType = { #pdf; #wordDoc; #wordDocx };
+  type CharacterNoteFileType = { #pdf; #image; #video };
+  type BlogFileType = { #pdf; #image; #video };
+
   type BookMetadata = {
     id : Text;
     title : Text;
@@ -50,15 +56,6 @@ module {
     sortOrder : Nat;
   };
 
-  type SiteAssets = {
-    authorPhoto : Storage.ExternalBlob;
-    logo : Storage.ExternalBlob;
-  };
-
-  type BookFileType = { #pdf; #wordDoc; #wordDocx };
-  type CharacterNoteFileType = { #pdf; #image; #video };
-  type BlogFileType = { #pdf; #image; #video };
-
   type UserProfile = {
     name : Text;
     email : Text;
@@ -68,13 +65,8 @@ module {
     welcomeMessageShown : Bool;
   };
 
-  type PublicUserProfile = {
-    name : Text;
-    profilePicture : ?Storage.ExternalBlob;
-  };
-
   type BookRating = {
-    userId : Principal.Principal;
+    userId : Principal;
     userName : Text;
     rating : Nat;
     timestamp : Int;
@@ -82,7 +74,7 @@ module {
 
   type BookComment = {
     commentId : Text;
-    userId : Principal.Principal;
+    userId : Principal;
     userName : Text;
     comment : Text;
     timestamp : Int;
@@ -91,13 +83,23 @@ module {
 
   type CommentLike = {
     commentId : Text;
-    userId : Principal.Principal;
+    userId : Principal;
+    timestamp : Int;
+  };
+
+  type ForumReply = {
+    replyId : Text;
+    threadId : Text;
+    authorId : Principal;
+    authorName : Text;
+    authorAvatar : ?Storage.ExternalBlob;
+    message : Text;
     timestamp : Int;
   };
 
   type ForumThread = {
     threadId : Text;
-    authorId : Principal.Principal;
+    authorId : Principal;
     authorName : Text;
     authorAvatar : ?Storage.ExternalBlob;
     title : Text;
@@ -105,16 +107,6 @@ module {
     timestamp : Int;
     replyCount : Nat;
     replies : [ForumReply];
-  };
-
-  type ForumReply = {
-    replyId : Text;
-    threadId : Text;
-    authorId : Principal.Principal;
-    authorName : Text;
-    authorAvatar : ?Storage.ExternalBlob;
-    message : Text;
-    timestamp : Int;
   };
 
   type NotificationType = { #comment; #rating; #feedback };
@@ -128,50 +120,34 @@ module {
     isRead : Bool;
   };
 
-  // Old actor type
+  type Suggestion = {
+    id : Text;
+    author : Principal;
+    authorName : Text;
+    authorAvatar : ?Storage.ExternalBlob;
+    message : Text;
+    timestamp : Int;
+  };
+
+  // Old actor state
   type OldActor = {
-    adminUsername : Text;
-    adminPassword : Text;
-    isAdminSessionActive : Bool;
-    lastAdminSessionPrincipal : ?Principal.Principal;
     siteAssets : ?SiteAssets;
     books : Map.Map<Text, BookMetadata>;
     bookAssets : Map.Map<Text, BookAsset>;
     characterNotes : Map.Map<Text, CharacterNote>;
     blogPosts : Map.Map<Text, BlogPost>;
     newComings : Map.Map<Text, NewComing>;
-    userProfiles : Map.Map<Principal.Principal, UserProfile>;
     bookComments : Map.Map<Text, [BookComment]>;
     bookRatings : Map.Map<Text, [BookRating]>;
     forumThreads : Map.Map<Text, ForumThread>;
     forumReplies : Map.Map<Text, ForumReply>;
     commentLikes : Map.Map<Text, [CommentLike]>;
     adminNotifications : Map.Map<Text, AdminNotification>;
+    suggestions : Map.Map<Text, Suggestion>;
+    userProfiles : Map.Map<Principal, UserProfile>;
   };
 
-  // New actor type (same as old)
-  type NewActor = {
-    adminUsername : Text;
-    adminPassword : Text;
-    isAdminSessionActive : Bool;
-    lastAdminSessionPrincipal : ?Principal.Principal;
-    accessControlInitialized : Bool;
-    siteAssets : ?SiteAssets;
-    books : Map.Map<Text, BookMetadata>;
-    bookAssets : Map.Map<Text, BookAsset>;
-    characterNotes : Map.Map<Text, CharacterNote>;
-    blogPosts : Map.Map<Text, BlogPost>;
-    newComings : Map.Map<Text, NewComing>;
-    userProfiles : Map.Map<Principal.Principal, UserProfile>;
-    bookComments : Map.Map<Text, [BookComment]>;
-    bookRatings : Map.Map<Text, [BookRating]>;
-    forumThreads : Map.Map<Text, ForumThread>;
-    forumReplies : Map.Map<Text, ForumReply>;
-    commentLikes : Map.Map<Text, [CommentLike]>;
-    adminNotifications : Map.Map<Text, AdminNotification>;
-  };
-
-  public func run(old : OldActor) : NewActor {
-    { old with accessControlInitialized = false };
+  public func run(old : OldActor) : OldActor {
+    old;
   };
 };

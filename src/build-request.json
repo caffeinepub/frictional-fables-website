@@ -1,83 +1,64 @@
 {
   "kind": "build_request",
-  "title": "Allow anonymous read access to Suggestions and Forum content",
+  "title": "Persist uploaded books and user profiles across upgrades/redeploys",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update backend access control so Suggestions feed and Forum threads (including replies) can be read by anonymous users and by logged-in users with incomplete profiles, while keeping write actions (create suggestion, create thread, reply) restricted to authenticated users with a complete profile.",
+      "text": "Ensure all user-generated and admin-managed data is preserved across normal canister upgrades/redeploys (i.e., code updates) so uploaded books and associated metadata are not removed after an upgrade.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "recent-messages-6"
+          "msg-9",
+          "msg-12",
+          "msg-15"
         ],
         "quotes": [
-          "Yes make it readable"
+          "Save the uploaded book and even if the website updates or redoploy the updated things should not be removed.",
+          "Save the uploaded book and even if the website updates or redoploy the updated things should not be removed.",
+          "Yes"
         ]
       },
       "acceptanceCriteria": [
-        "When the caller is anonymous, backend query methods used to fetch the Suggestions feed return data instead of trapping with an Unauthorized/complete-profile error.",
-        "When the caller is anonymous, backend query methods used to fetch Forum threads and embedded replies return data instead of trapping with an Unauthorized/complete-profile error.",
-        "Backend write methods for suggestions/threads/replies continue to reject anonymous callers and callers without complete profiles with a clear Unauthorized/complete-profile error message.",
-        "No existing stored data (suggestions, threads, replies) is lost after deployment."
+        "After uploading at least one book (metadata + file + cover), performing a canister upgrade retains the book in listings and the reader can still fetch the same book assets.",
+        "After uploading/editing other stored entities already supported by the canister (site assets, blog posts, character notes, forum threads/replies, suggestions, comments, ratings), performing a canister upgrade retains those entities and they remain readable via existing query methods.",
+        "No data is lost on upgrade unless the canister is explicitly reinstalled (documented/implicit IC behavior)."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Adjust frontend data fetching so viewing Suggestions and Forum content does not depend on a successful profile fetch. The app must render the Suggestions feed and Forum threads for logged-out visitors without showing a blocking login/profile modal, while still requiring login+complete profile only for posting actions.",
-      "target": "frontend",
+      "text": "Persist user profiles across normal canister upgrades/redeploys so profiles that users create remain saved and can be accessed by admin workflows after upgrades.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "recent-messages-6"
+          "msg-3",
+          "msg-15"
         ],
         "quotes": [
-          "Yes make it readable"
+          "All the profiles made should be saved and visible to the admin.",
+          "Yes"
         ]
       },
       "acceptanceCriteria": [
-        "Opening the Suggestions page while logged out shows the community suggestions list (or an empty state) without requiring login.",
-        "Opening the Forum page while logged out shows the threads list (or an empty state) without requiring login.",
-        "On both pages, attempting to submit a suggestion, create a thread, or post a reply while logged out (or with an incomplete profile) opens the existing LoginRequiredModal and prevents submission.",
-        "The loading state on Suggestions/Forum pages does not stay stuck due to a failed/disabled profile query when the user is logged out."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Make the frontend profile query used across the app resilient for logged-out visitors by treating authorization failures as an unauthenticated state (returning null/disabled query) rather than a hard failure that blocks public pages.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-messages-6"
-        ],
-        "quotes": [
-          "Yes make it readable"
-        ]
-      },
-      "acceptanceCriteria": [
-        "When the user is logged out, the profile query does not spam retries/toasts and does not block rendering of public-readable pages (Suggestions/Forum).",
-        "When the user logs in, the profile query refetches and correctly reports whether the profile is complete for gating posting actions.",
-        "No changes are required to immutable hook files (useInternetIdentity/useActor), and the solution is implemented via editable hooks/pages (e.g., useQueries and the pages)."
+        "After a user saves a profile, performing a canister upgrade preserves that profile (the same principal can still retrieve it).",
+        "Admin-only profile visibility (as supported by existing backend methods) continues to work after an upgrade, and previously created profiles remain accessible."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo; add backend/migration.mo only if a state layout change is strictly necessary.",
-    "Do not edit files under frontend/src/components/ui or any path listed in frontend.immutablePaths.",
-    "Use English for all user-facing text."
+    "Backend must remain a single Motoko actor in backend/main.mo.",
+    "Use English for any user-facing text."
   ],
   "nonGoals": [
-    "Making books, blog posts, character notes, or book assets publicly readable without login/profile (only Suggestions and Forum read access are in scope).",
-    "Adding third-party authentication or any non-Internet-Identity auth provider.",
-    "Introducing real-time updates via WebSockets."
+    "Guaranteeing persistence across canister reinstall/delete actions (only across normal upgrades/redeploys).",
+    "Adding third-party databases or external storage providers."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
   },
   "userProfileUpdate": {
-    "goalsToAdd": [
-      "Allow Suggestions and Forum content to be readable without requiring login or a completed profile (anonymous read access)."
-    ],
+    "goalsToAdd": [],
     "goalsToRemove": [],
     "preferencesToAdd": [],
     "preferencesToRemove": [],

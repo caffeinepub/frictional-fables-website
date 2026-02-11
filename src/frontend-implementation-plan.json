@@ -1,55 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Anonymous read access for Suggestions & Forum (frontend resiliency)",
-  "requirements": [
-    {
-      "id": "REQ-2",
-      "summary": "Render Suggestions and Forum content for logged-out visitors without depending on profile fetch, while still gating posting actions behind LoginRequiredModal.",
-      "acceptanceCriteria": [
-        "Opening the Suggestions page while logged out shows the community suggestions list (or an empty state) without requiring login.",
-        "Opening the Forum page while logged out shows the threads list (or an empty state) without requiring login.",
-        "On both pages, attempting to submit a suggestion, create a thread, or post a reply while logged out (or with an incomplete profile) opens the existing LoginRequiredModal and prevents submission.",
-        "The loading state on Suggestions/Forum pages does not stay stuck due to a failed/disabled profile query when the user is logged out."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/SuggestionsPage.tsx",
-          "operation": "modify",
-          "description": "Decouple Suggestions feed rendering/loading from the profile query (e.g., do not include profileLoading in the feed loading state), so logged-out visitors can always view the suggestions list/empty state. Keep posting gated by existing LoginRequiredModal behavior."
-        },
-        {
-          "path": "frontend/src/pages/ForumPage.tsx",
-          "operation": "modify",
-          "description": "Decouple Forum threads rendering/loading from the profile query (e.g., do not include profileLoading in the threads loading state), so logged-out visitors can always view threads + replies list/empty state. Keep thread/reply posting gated by existing LoginRequiredModal behavior."
-        },
-        {
-          "path": "frontend/src/components/LoginRequiredModal.tsx",
-          "operation": "modify",
-          "description": "Ensure the modal remains suitable for the updated flow: used only for posting actions on Suggestions/Forum when logged out or profile-incomplete (no change to UI library components under frontend/src/components/ui). If adjusting any messaging defaults, keep all user-facing text in English and do not introduce read-access gating."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Make the shared frontend profile query resilient for logged-out visitors by treating authorization failures as unauthenticated and preventing public-readable pages from being blocked by profile query errors.",
-      "acceptanceCriteria": [
-        "When the user is logged out, the profile query does not spam retries/toasts and does not block rendering of public-readable pages (Suggestions/Forum).",
-        "When the user logs in, the profile query refetches and correctly reports whether the profile is complete for gating posting actions.",
-        "No changes are required to immutable hook files (useInternetIdentity/useActor), and the solution is implemented via editable hooks/pages (e.g., useQueries and the pages)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Update useGetCallerUserProfile to be authentication-aware (disable or short-circuit when no identity) and to handle authorization/unauthenticated failures by returning a null profile state instead of surfacing a hard error that can affect shared UI logic. This should keep retry behavior non-spammy (e.g., no retries for auth-related failures) and allow refetch on login."
-        },
-        {
-          "path": "frontend/src/components/ProfileSetupModal.tsx",
-          "operation": "modify",
-          "description": "Align modal gating with the resilient profile query behavior so it never appears for logged-out visitors and only appears for authenticated users when the profile query has definitively resolved to an incomplete state (avoid relying on error states)."
-        }
-      ]
-    }
-  ]
+  "title": "Frontend plan: No changes required for upgrade persistence",
+  "requirements": []
 }

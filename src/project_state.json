@@ -1,49 +1,44 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
+  "summary": "App should persist user-generated data (uploaded books, profiles, posts/comments, admin uploads) across normal updates/redeploys (upgrades) without deletion.",
   "architectural_notes": [
-    "Adjust authorization rules: keep posting/actions gated by login/profile completeness, but allow anonymous read access for suggestions/forum listings and detail views."
+    "Use stable/persistent storage strategy so canister upgrades retain uploaded books, metadata, profiles, posts, comments, and admin uploads (avoid data loss on upgrade)."
   ],
-  "known_issues": [
-    "Users report 'new features not working' due to content being hidden when not logged in or profile is incomplete."
-  ],
-  "isFixRequest": true,
-  "existing_features": [
-    {
-      "id": "feature-adjust-frontend-data-fetching-so-viewing-suggestions-and-forum-content-does-not-depend-on-a-successful-profile-fetch-the-app-must-render-the-suggestions-feed-and-forum-threads-for-logged-out-visitors-without-showing-a-blocking-login-profile-modal-while-still-requiring-login-complete-profile-only-for-posting-actions",
-      "title": "Adjust frontend data fetching so viewing Suggestions and Forum content does not depend on a successful profile fetch. The app must render the Suggestions feed and Forum threads for logged-out visitors without showing a blocking login/profile modal, while still requiring login+complete profile only for posting actions.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-make-the-frontend-profile-query-used-across-the-app-resilient-for-logged-out-visitors-by-treating-authorization-failures-as-an-unauthenticated-state-returning-null-disabled-query-rather-than-a-hard-failure-that-blocks-public-pages",
-      "title": "Make the frontend profile query used across the app resilient for logged-out visitors by treating authorization failures as an unauthenticated state (returning null/disabled query) rather than a hard failure that blocks public pages.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    }
-  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Allow suggestions/forum content to be readable without requiring login or a completed profile (anonymous read access)",
+      "summary": "Persist uploaded books and related metadata across updates/redeploys so uploads are not removed",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Update backend access control so Suggestions feed and Forum threads (including replies) can be read by anonymous users and by logged-in users with incomplete profiles, while keeping write actions (create suggestion, create thread, reply) restricted to authenticated users with a complete profile.",
+      "summary": "Persist user profiles and ensure created profiles are saved and visible to the admin across updates",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Ensure all user-generated and admin-managed data is preserved across normal canister upgrades/redeploys (i.e., code updates) so uploaded books and associated metadata are not removed after an upgrade.",
       "reqIds": [
         "REQ-1"
       ],
       "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Persist user profiles across normal canister upgrades/redeploys so profiles that users create remain saved and can be accessed by admin workflows after upgrades.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
     }
   ],
-  "projectName": "Allow anonymous read access to Suggestions and Forum content",
+  "projectName": "Persist uploaded books and user profiles across upgrades/redeploys",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }
