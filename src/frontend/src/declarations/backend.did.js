@@ -88,6 +88,14 @@ export const ForumThread = IDL.Record({
   'replies' : IDL.Vec(ForumReply),
   'threadId' : IDL.Text,
 });
+export const UserProfile = IDL.Record({
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'welcomeMessageShown' : IDL.Bool,
+  'gender' : IDL.Opt(IDL.Text),
+  'profilePicture' : IDL.Opt(ExternalBlob),
+  'bestReads' : IDL.Opt(IDL.Text),
+});
 export const BookFileType = IDL.Variant({
   'pdf' : IDL.Null,
   'wordDoc' : IDL.Null,
@@ -112,14 +120,6 @@ export const BookRating = IDL.Record({
   'userId' : IDL.Principal,
   'timestamp' : IDL.Int,
   'rating' : IDL.Nat,
-});
-export const UserProfile = IDL.Record({
-  'name' : IDL.Text,
-  'email' : IDL.Text,
-  'welcomeMessageShown' : IDL.Bool,
-  'gender' : IDL.Opt(IDL.Text),
-  'profilePicture' : IDL.Opt(ExternalBlob),
-  'bestReads' : IDL.Opt(IDL.Text),
 });
 export const PublicUserProfile = IDL.Record({
   'name' : IDL.Text,
@@ -218,7 +218,12 @@ export const idlService = IDL.Service({
   'getAllBooks' : IDL.Func([], [IDL.Vec(BookMetadata)], ['query']),
   'getAllCharacterNotes' : IDL.Func([], [IDL.Vec(CharacterNote)], ['query']),
   'getAllNewComings' : IDL.Func([], [IDL.Vec(NewComing)], ['query']),
-  'getAllThreadsWithReplies' : IDL.Func([], [IDL.Vec(ForumThread)], []),
+  'getAllThreadsWithReplies' : IDL.Func([], [IDL.Vec(ForumThread)], ['query']),
+  'getAllUserProfilesWithPrincipals' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Principal, UserProfile))],
+      ['query'],
+    ),
   'getBlogPost' : IDL.Func([IDL.Text], [IDL.Opt(BlogPost)], ['query']),
   'getBook' : IDL.Func([IDL.Text], [IDL.Opt(BookMetadata)], ['query']),
   'getBookAssets' : IDL.Func([IDL.Text], [IDL.Opt(BookAsset)], ['query']),
@@ -249,11 +254,15 @@ export const idlService = IDL.Service({
       [IDL.Opt(PublicUserProfile)],
       ['query'],
     ),
-  'getRepliesByThread' : IDL.Func([IDL.Text], [IDL.Vec(ForumReply)], []),
+  'getRepliesByThread' : IDL.Func([IDL.Text], [IDL.Vec(ForumReply)], ['query']),
   'getReplyById' : IDL.Func([IDL.Text], [IDL.Opt(ForumReply)], ['query']),
   'getSiteAssets' : IDL.Func([], [IDL.Opt(SiteAssets)], ['query']),
-  'getSuggestionsFeed' : IDL.Func([], [IDL.Vec(Suggestion)], []),
-  'getThreadWithReplies' : IDL.Func([IDL.Text], [IDL.Opt(ForumThread)], []),
+  'getSuggestionsFeed' : IDL.Func([], [IDL.Vec(Suggestion)], ['query']),
+  'getThreadWithReplies' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(ForumThread)],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -388,6 +397,14 @@ export const idlFactory = ({ IDL }) => {
     'replies' : IDL.Vec(ForumReply),
     'threadId' : IDL.Text,
   });
+  const UserProfile = IDL.Record({
+    'name' : IDL.Text,
+    'email' : IDL.Text,
+    'welcomeMessageShown' : IDL.Bool,
+    'gender' : IDL.Opt(IDL.Text),
+    'profilePicture' : IDL.Opt(ExternalBlob),
+    'bestReads' : IDL.Opt(IDL.Text),
+  });
   const BookFileType = IDL.Variant({
     'pdf' : IDL.Null,
     'wordDoc' : IDL.Null,
@@ -412,14 +429,6 @@ export const idlFactory = ({ IDL }) => {
     'userId' : IDL.Principal,
     'timestamp' : IDL.Int,
     'rating' : IDL.Nat,
-  });
-  const UserProfile = IDL.Record({
-    'name' : IDL.Text,
-    'email' : IDL.Text,
-    'welcomeMessageShown' : IDL.Bool,
-    'gender' : IDL.Opt(IDL.Text),
-    'profilePicture' : IDL.Opt(ExternalBlob),
-    'bestReads' : IDL.Opt(IDL.Text),
   });
   const PublicUserProfile = IDL.Record({
     'name' : IDL.Text,
@@ -525,7 +534,16 @@ export const idlFactory = ({ IDL }) => {
     'getAllBooks' : IDL.Func([], [IDL.Vec(BookMetadata)], ['query']),
     'getAllCharacterNotes' : IDL.Func([], [IDL.Vec(CharacterNote)], ['query']),
     'getAllNewComings' : IDL.Func([], [IDL.Vec(NewComing)], ['query']),
-    'getAllThreadsWithReplies' : IDL.Func([], [IDL.Vec(ForumThread)], []),
+    'getAllThreadsWithReplies' : IDL.Func(
+        [],
+        [IDL.Vec(ForumThread)],
+        ['query'],
+      ),
+    'getAllUserProfilesWithPrincipals' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, UserProfile))],
+        ['query'],
+      ),
     'getBlogPost' : IDL.Func([IDL.Text], [IDL.Opt(BlogPost)], ['query']),
     'getBook' : IDL.Func([IDL.Text], [IDL.Opt(BookMetadata)], ['query']),
     'getBookAssets' : IDL.Func([IDL.Text], [IDL.Opt(BookAsset)], ['query']),
@@ -560,11 +578,19 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(PublicUserProfile)],
         ['query'],
       ),
-    'getRepliesByThread' : IDL.Func([IDL.Text], [IDL.Vec(ForumReply)], []),
+    'getRepliesByThread' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(ForumReply)],
+        ['query'],
+      ),
     'getReplyById' : IDL.Func([IDL.Text], [IDL.Opt(ForumReply)], ['query']),
     'getSiteAssets' : IDL.Func([], [IDL.Opt(SiteAssets)], ['query']),
-    'getSuggestionsFeed' : IDL.Func([], [IDL.Vec(Suggestion)], []),
-    'getThreadWithReplies' : IDL.Func([IDL.Text], [IDL.Opt(ForumThread)], []),
+    'getSuggestionsFeed' : IDL.Func([], [IDL.Vec(Suggestion)], ['query']),
+    'getThreadWithReplies' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ForumThread)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],

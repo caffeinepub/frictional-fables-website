@@ -1,6 +1,56 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Frontend plan: No changes required for upgrade persistence",
-  "requirements": []
+  "title": "Admin dashboard Profiles view (frontend)",
+  "requirements": [
+    {
+      "id": "REQ-2",
+      "summary": "Add a typed React Query hook to fetch the admin-only list of all saved user profiles.",
+      "acceptanceCriteria": [
+        "A new hook (e.g., useGetAllUserProfilesForAdmin) is added to frontend/src/hooks/useQueries.ts.",
+        "The hook is disabled when the actor is not available and handles authorization failures gracefully (no infinite retries).",
+        "The hook’s queryKey is stable and unique (e.g., ['adminUserProfiles'])."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add a new React Query hook (e.g., useGetAllUserProfilesForAdmin) that calls the backend typed actor capability for listing all profiles (expected to be available as getAllUserProfilesWithPrincipals). Ensure enabled is false when the actor is unavailable/still fetching, use a stable queryKey like ['adminUserProfiles'], and disable retries (or conditionally disable retries) on authorization failures to avoid infinite retry loops. Use the existing error-handling patterns already present in this file. Use the authorization component’s frontend guidance for handling authorization errors gracefully; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/backend.d.ts",
+          "operation": "modify",
+          "description": "Verify the backendInterface typing includes the new admin profile-listing capability and the expected return type (Principal + full UserProfile). If missing or mismatched, update the type declarations so the typed actor exposes the new method to the frontend. (Do not change runtime behavior here—types only.)"
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Add a Profiles section in the Admin Dashboard with search, list, and detail view for saved user profiles (admin-only).",
+      "acceptanceCriteria": [
+        "When an admin is signed in (per existing isAdmin gating), the Admin Dashboard includes a new section/tab labeled \"Profiles\".",
+        "The Profiles view shows a list of saved profiles with at least: user name, email, and the user Principal (as text).",
+        "The list supports client-side search/filter (e.g., by name/email/principal substring).",
+        "Selecting a profile reveals the full profile details (gender, bestReads, welcomeMessageShown, and profile picture preview if present).",
+        "Non-admin users cannot access the Profiles view; they continue to see the existing AdminSignInPanel gating behavior."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/AdminProfilesPanel.tsx",
+          "operation": "create",
+          "description": "Create an admin-only Profiles panel component that uses the new useGetAllUserProfilesForAdmin hook to render: (1) a client-side searchable list showing name, email, and principal text; (2) a selectable detail view showing full UserProfile fields including gender, bestReads, welcomeMessageShown, and a profile picture preview when present. For the picture preview, use blob-storage’s ExternalBlob.getDirectURL() pattern (via existing data type behavior) and/or the existing UserAvatar component for consistent rendering; verify the component's usage instructions before implementing. Handle authorization errors by showing an access-denied style message rather than crashing or retrying."
+        },
+        {
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Wire the new Profiles section into the existing Admin Dashboard Tabs by adding a new tab trigger labeled \"Profiles\" and a corresponding TabsContent that renders the new AdminProfilesPanel. Keep the existing isAdmin gating behavior (AdminSignInPanel for non-admins) unchanged; leverage the authorization component’s role-based access UI expectations for admin-only sections; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/UserAvatar.tsx",
+          "operation": "modify",
+          "description": "If needed for the Profiles detail view, extend UserAvatar to better support admin profile preview use cases (e.g., optional larger size or className handling already present). Ensure it continues to safely render ExternalBlob-based images via getDirectURL without requiring downloads. Use blob-storage ExternalBlob rendering guidance as the underlying mechanism; verify the component's usage instructions before implementing."
+        }
+      ]
+    }
+  ]
 }

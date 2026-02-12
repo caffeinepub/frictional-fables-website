@@ -18,9 +18,10 @@ import {
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { ExternalBlob, BookFileType } from '../backend';
 import { toast } from 'sonner';
-import { Loader2, Upload, Image as ImageIcon, Settings, FileText, X, AlertCircle, BookPlus, LogOut } from 'lucide-react';
+import { Loader2, Upload, Image as ImageIcon, Settings, FileText, X, AlertCircle, BookPlus, LogOut, Users } from 'lucide-react';
 import BookUploadPanel from '../components/BookUploadPanel';
 import AdminSignInPanel from '../components/AdminSignInPanel';
+import AdminProfilesPanel from '../components/admin/AdminProfilesPanel';
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -267,10 +268,14 @@ export default function AdminDashboardPage() {
         </Alert>
 
         <Tabs defaultValue="books" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="books">
               <BookPlus className="h-4 w-4 mr-2" />
               Books
+            </TabsTrigger>
+            <TabsTrigger value="profiles">
+              <Users className="h-4 w-4 mr-2" />
+              Profiles
             </TabsTrigger>
             <TabsTrigger value="assets">
               <Upload className="h-4 w-4 mr-2" />
@@ -285,6 +290,11 @@ export default function AdminDashboardPage() {
           {/* Book Upload & Customization Tab */}
           <TabsContent value="books">
             <BookUploadPanel />
+          </TabsContent>
+
+          {/* Profiles Tab */}
+          <TabsContent value="profiles">
+            <AdminProfilesPanel />
           </TabsContent>
 
           {/* Upload Book Assets Tab */}
@@ -500,87 +510,79 @@ export default function AdminDashboardPage() {
             </Card>
           </TabsContent>
 
-          {/* Manage Site Images Tab */}
+          {/* Site Images Tab */}
           <TabsContent value="images" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Site Logo
+                  <ImageIcon className="h-5 w-5" />
+                  Upload Site Logo
                 </CardTitle>
                 <CardDescription>
-                  Manage the site logo displayed in the header. Drag and drop or click to browse.
+                  Upload or replace the site logo displayed in the header. Drag and drop or click to browse.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {siteAssets?.logo && !logoPreview && (
-                  <div className="p-4 border rounded-lg bg-muted/30">
-                    <p className="text-sm font-medium mb-3">Current Logo:</p>
-                    <img
-                      src={siteAssets.logo.getDirectURL()}
-                      alt="Current logo"
-                      className="w-48 h-auto object-contain border rounded-lg p-4 bg-background"
+                <div className="space-y-2">
+                  <Label>Logo Image *</Label>
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+                      isDraggingLogo
+                        ? 'border-primary bg-primary/5'
+                        : 'border-muted-foreground/25 hover:border-primary/50'
+                    }`}
+                    onDragOver={(e) => handleDragOver(e, setIsDraggingLogo)}
+                    onDragLeave={(e) => handleDragLeave(e, setIsDraggingLogo)}
+                    onDrop={(e) => handleDrop(e, setLogoFile, setIsDraggingLogo, 'image/*')}
+                    onClick={() => logoInputRef.current?.click()}
+                  >
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
                     />
+                    {logoPreview ? (
+                      <div className="space-y-4">
+                        <img
+                          src={logoPreview}
+                          alt="Logo preview"
+                          className="max-w-xs mx-auto h-auto rounded-lg border"
+                        />
+                        <p className="font-medium">{logoFile?.name}</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLogoFile(null);
+                            setLogoPreview(null);
+                          }}
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Remove
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground" />
+                        <p className="font-medium">Drag and drop your logo here</p>
+                        <p className="text-sm text-muted-foreground">or click to browse</p>
+                        <p className="text-xs text-muted-foreground">PNG, JPG, or WEBP</p>
+                      </div>
+                    )}
                   </div>
-                )}
 
-                <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
-                    isDraggingLogo
-                      ? 'border-primary bg-primary/5'
-                      : 'border-muted-foreground/25 hover:border-primary/50'
-                  }`}
-                  onDragOver={(e) => handleDragOver(e, setIsDraggingLogo)}
-                  onDragLeave={(e) => handleDragLeave(e, setIsDraggingLogo)}
-                  onDrop={(e) => handleDrop(e, setLogoFile, setIsDraggingLogo, 'image/*')}
-                  onClick={() => logoInputRef.current?.click()}
-                >
-                  <input
-                    ref={logoInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
-                  />
-                  {logoPreview ? (
-                    <div className="space-y-4">
-                      <img
-                        src={logoPreview}
-                        alt="New logo preview"
-                        className="w-48 h-auto object-contain border rounded-lg p-4 bg-background mx-auto"
-                      />
-                      <p className="font-medium">{logoFile?.name}</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLogoFile(null);
-                          setLogoPreview(null);
-                        }}
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
+                  {logoProgress > 0 && logoProgress < 100 && (
                     <div className="space-y-2">
-                      <Settings className="h-12 w-12 mx-auto text-muted-foreground" />
-                      <p className="font-medium">Drag and drop site logo here</p>
-                      <p className="text-sm text-muted-foreground">or click to browse</p>
-                      <p className="text-xs text-muted-foreground">Transparent PNG recommended</p>
+                      <Progress value={logoProgress} />
+                      <p className="text-sm text-muted-foreground text-center">
+                        Uploading... {logoProgress}%
+                      </p>
                     </div>
                   )}
                 </div>
-
-                {logoProgress > 0 && logoProgress < 100 && (
-                  <div className="space-y-2">
-                    <Progress value={logoProgress} />
-                    <p className="text-sm text-muted-foreground text-center">
-                      Uploading... {logoProgress}%
-                    </p>
-                  </div>
-                )}
 
                 <Button
                   onClick={handleUploadLogo}
@@ -596,10 +598,23 @@ export default function AdminDashboardPage() {
                   ) : (
                     <>
                       <Upload className="mr-2 h-4 w-4" />
-                      {siteAssets?.logo ? 'Replace Logo' : 'Upload Logo'}
+                      Upload Logo
                     </>
                   )}
                 </Button>
+
+                {siteAssets?.logo && (
+                  <div className="mt-6 space-y-2">
+                    <Label>Current Logo</Label>
+                    <div className="rounded-lg border p-4 bg-muted/30">
+                      <img
+                        src={siteAssets.logo.getDirectURL()}
+                        alt="Current logo"
+                        className="max-w-xs mx-auto h-auto"
+                      />
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

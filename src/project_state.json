@@ -1,44 +1,45 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "App should persist user-generated data (uploaded books, profiles, posts/comments, admin uploads) across normal updates/redeploys (upgrades) without deletion.",
-  "architectural_notes": [
-    "Use stable/persistent storage strategy so canister upgrades retain uploaded books, metadata, profiles, posts, comments, and admin uploads (avoid data loss on upgrade)."
-  ],
+  "summary": "New project",
+  "architectural_notes": [],
   "known_issues": [],
   "isFixRequest": false,
-  "existing_features": [],
+  "existing_features": [
+    {
+      "id": "feature-expose-the-new-backend-admin-profile-listing-query-through-the-frontend-typed-actor-and-add-a-react-query-hook-to-fetch-it-following-the-patterns-used-in-frontend-src-hooks-usequeries-ts",
+      "title": "Expose the new backend admin profile-listing query through the frontend typed actor and add a React Query hook to fetch it (following the patterns used in frontend/src/hooks/useQueries.ts).",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-admin-ui-view-that-displays-all-saved-user-profiles-to-authenticated-admins-in-the-admin-dashboard-including-a-searchable-list-and-a-detail-view-for-a-selected-profile",
+      "title": "Add an admin UI view that displays all saved user profiles to authenticated admins in the Admin Dashboard, including a searchable list and a detail view for a selected profile.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    }
+  ],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Persist uploaded books and related metadata across updates/redeploys so uploads are not removed",
+      "summary": "Add an admin view to list and access all saved user profiles",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Persist user profiles and ensure created profiles are saved and visible to the admin across updates",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Ensure all user-generated and admin-managed data is preserved across normal canister upgrades/redeploys (i.e., code updates) so uploaded books and associated metadata are not removed after an upgrade.",
+      "summary": "Add a backend admin-only query that returns a list of all saved user profiles, including each profile’s owning Principal and the stored UserProfile fields.",
       "reqIds": [
         "REQ-1"
       ],
       "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Persist user profiles across normal canister upgrades/redeploys so profiles that users create remain saved and can be accessed by admin workflows after upgrades.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
     }
   ],
-  "projectName": "Persist uploaded books and user profiles across upgrades/redeploys",
+  "projectName": "Admin view to list all saved user profiles",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -10,10 +10,9 @@ import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import Migration "migration";
 
 // Apply data migration for upgrade persistence.
-(with migration = Migration.run)
+
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -161,7 +160,6 @@ actor {
     isRead : Bool;
   };
 
-  // New suggestion type
   public type Suggestion = {
     id : Text;
     author : Principal;
@@ -272,6 +270,11 @@ actor {
         };
       };
     };
+  };
+
+  public query ({ caller }) func getAllUserProfilesWithPrincipals() : async [(Principal, UserProfile)] {
+    requireAdmin(caller);
+    userProfiles.toArray();
   };
 
   public shared ({ caller }) func uploadLogo(logo : Storage.ExternalBlob) : async () {
@@ -1095,7 +1098,7 @@ actor {
   };
 
   // Forum feed (open to all)
-  public func getAllThreadsWithReplies() : async [ForumThread] {
+  public query func getAllThreadsWithReplies() : async [ForumThread] {
     let allThreads = forumThreads.values().toArray();
 
     allThreads.sort(
@@ -1106,12 +1109,12 @@ actor {
   };
 
   // Get thread + replies (open to all)
-  public func getThreadWithReplies(threadId : Text) : async ?ForumThread {
+  public query func getThreadWithReplies(threadId : Text) : async ?ForumThread {
     forumThreads.get(threadId);
   };
 
   // Get thread replies (open to all)
-  public func getRepliesByThread(threadId : Text) : async [ForumReply] {
+  public query func getRepliesByThread(threadId : Text) : async [ForumReply] {
     if (threadId == "") {
       Runtime.trap("Thread ID is required");
     };
@@ -1205,7 +1208,7 @@ actor {
   };
 
   // Suggestions feed (open to all)
-  public func getSuggestionsFeed() : async [Suggestion] {
+  public query func getSuggestionsFeed() : async [Suggestion] {
     let allSuggestions = suggestions.values().toArray();
 
     allSuggestions.sort(
@@ -1215,4 +1218,3 @@ actor {
     );
   };
 };
-

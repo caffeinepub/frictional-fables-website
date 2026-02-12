@@ -149,6 +149,7 @@ export interface backendInterface {
     getAllCharacterNotes(): Promise<Array<CharacterNote>>;
     getAllNewComings(): Promise<Array<NewComing>>;
     getAllThreadsWithReplies(): Promise<Array<ForumThread>>;
+    getAllUserProfilesWithPrincipals(): Promise<Array<[Principal, UserProfile]>>;
     getBlogPost(id: string): Promise<BlogPost | null>;
     getBook(id: string): Promise<BookMetadata | null>;
     getBookAssets(bookId: string): Promise<BookAsset | null>;

@@ -64,6 +64,27 @@ export function useGetPublicUserProfile(userId: Principal | null) {
   });
 }
 
+// Admin - Get All User Profiles
+export function useGetAllUserProfilesForAdmin() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Array<[Principal, UserProfile]>>({
+    queryKey: ['adminUserProfiles'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getAllUserProfilesWithPrincipals();
+    },
+    enabled: !!actor && !isFetching,
+    retry: (failureCount, error: any) => {
+      // Don't retry on authorization errors
+      if (error?.message?.includes('Unauthorized') || error?.message?.includes('Only admins')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+  });
+}
+
 // Admin Authentication
 export function useIsAdmin() {
   const { actor, isFetching } = useActor();
@@ -727,19 +748,12 @@ export function useGetAllThreads() {
       return actor.getAllThreadsWithReplies();
     },
     enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetThread(threadId: string) {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<ForumThread | null>({
-    queryKey: ['forumThread', threadId],
-    queryFn: async () => {
-      if (!actor) return null;
-      return actor.getThreadWithReplies(threadId);
+    retry: (failureCount, error: any) => {
+      if (error?.message?.includes('Unauthorized') || error?.message?.includes('complete your profile')) {
+        return false;
+      }
+      return failureCount < 3;
     },
-    enabled: !!actor && !isFetching && !!threadId,
   });
 }
 
@@ -784,6 +798,12 @@ export function useGetSuggestionsFeed() {
       return actor.getSuggestionsFeed();
     },
     enabled: !!actor && !isFetching,
+    retry: (failureCount, error: any) => {
+      if (error?.message?.includes('Unauthorized') || error?.message?.includes('complete your profile')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 }
 
@@ -798,21 +818,6 @@ export function useCreateSuggestion() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
-    },
-  });
-}
-
-export function useUploadAuthorPhoto() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (photo: ExternalBlob) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.uploadAuthorPhoto(photo);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siteAssets'] });
     },
   });
 }

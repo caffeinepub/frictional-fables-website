@@ -197,6 +197,10 @@ export interface _SERVICE {
   'getAllCharacterNotes' : ActorMethod<[], Array<CharacterNote>>,
   'getAllNewComings' : ActorMethod<[], Array<NewComing>>,
   'getAllThreadsWithReplies' : ActorMethod<[], Array<ForumThread>>,
+  'getAllUserProfilesWithPrincipals' : ActorMethod<
+    [],
+    Array<[Principal, UserProfile]>
+  >,
   'getBlogPost' : ActorMethod<[string], [] | [BlogPost]>,
   'getBook' : ActorMethod<[string], [] | [BookMetadata]>,
   'getBookAssets' : ActorMethod<[string], [] | [BookAsset]>,

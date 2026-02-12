@@ -1,4 +1,46 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-expose-the-new-backend-admin-profile-listing-query-through-the-frontend-typed-actor-and-add-a-react-query-hook-to-fetch-it-following-the-patterns-used-in-frontend-src-hooks-usequeries-ts",
+      "featureTitle": "Expose the new backend admin profile-listing query through the frontend typed actor and add a React Query hook to fetch it (following the patterns used in frontend/src/hooks/useQueries.ts).",
+      "files": [
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-an-admin-ui-view-that-displays-all-saved-user-profiles-to-authenticated-admins-in-the-admin-dashboard-including-a-searchable-list-and-a-detail-view-for-a-selected-profile",
+      "featureTitle": "Add an admin UI view that displays all saved user profiles to authenticated admins in the Admin Dashboard, including a searchable list and a detail view for a selected profile.",
+      "files": [
+        "frontend/src/components/admin/AdminProfilesPanel.tsx",
+        "frontend/src/pages/AdminDashboardPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

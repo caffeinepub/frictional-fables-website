@@ -1,41 +1,64 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T22:44:39.038Z",
+  "generatedAt": "2026-02-12T06:18:52.926Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 0,
+    "total": 3,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Ensure all user-generated and admin-managed data is preserved across normal canister upgrades/redeploys (i.e., code updates) so uploaded books and associated metadata are not removed after an upgrade.",
+        "summary": "Add a backend admin-only query that returns a list of all saved user profiles, including each profile’s owning Principal and the stored UserProfile fields.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Persist user profiles across normal canister upgrades/redeploys so profiles that users create remain saved and can be accessed by admin workflows after upgrades.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Expose the new backend admin profile-listing query through the frontend typed actor and add a React Query hook to fetch it (following the patterns used in frontend/src/hooks/useQueries.ts).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/backend.d.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/backend.d.ts"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Add an admin UI view that displays all saved user profiles to authenticated admins in the Admin Dashboard, including a searchable list and a detail view for a selected profile.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/AdminProfilesPanel.tsx",
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/components/UserAvatar.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/AdminProfilesPanel.tsx",
+          "frontend/src/pages/AdminDashboardPage.tsx"
+        ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
+    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
+    "frontend/src/components/admin/AdminProfilesPanel.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/AdminDashboardPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

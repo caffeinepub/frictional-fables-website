@@ -1,70 +1,76 @@
 {
   "kind": "build_request",
-  "title": "Persist uploaded books and user profiles across upgrades/redeploys",
+  "title": "Admin view to list all saved user profiles",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Ensure all user-generated and admin-managed data is preserved across normal canister upgrades/redeploys (i.e., code updates) so uploaded books and associated metadata are not removed after an upgrade.",
+      "text": "Add a backend admin-only query that returns a list of all saved user profiles, including each profile’s owning Principal and the stored UserProfile fields.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-9",
-          "msg-12",
-          "msg-15"
+          "msg-6"
         ],
         "quotes": [
-          "Save the uploaded book and even if the website updates or redoploy the updated things should not be removed.",
-          "Save the uploaded book and even if the website updates or redoploy the updated things should not be removed.",
-          "Yes"
+          "Add a feature where all the saved profiles would be visible to admin."
         ]
       },
       "acceptanceCriteria": [
-        "After uploading at least one book (metadata + file + cover), performing a canister upgrade retains the book in listings and the reader can still fetch the same book assets.",
-        "After uploading/editing other stored entities already supported by the canister (site assets, blog posts, character notes, forum threads/replies, suggestions, comments, ratings), performing a canister upgrade retains those entities and they remain readable via existing query methods.",
-        "No data is lost on upgrade unless the canister is explicitly reinstalled (documented/implicit IC behavior)."
+        "A new query method exists in backend/main.mo that returns an array/list of all saved profiles.",
+        "The method traps with an authorization error unless the caller is an admin (same admin authorization mechanism used by other admin-only methods).",
+        "Each returned list item includes the user’s Principal plus the full UserProfile (name, email, gender, bestReads, profilePicture, welcomeMessageShown).",
+        "Calling the new method does not modify canister state."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Persist user profiles across normal canister upgrades/redeploys so profiles that users create remain saved and can be accessed by admin workflows after upgrades.",
-      "target": "backend",
+      "text": "Expose the new backend admin profile-listing query through the frontend typed actor and add a React Query hook to fetch it (following the patterns used in frontend/src/hooks/useQueries.ts).",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-3",
-          "msg-15"
+          "msg-6"
         ],
         "quotes": [
-          "All the profiles made should be saved and visible to the admin.",
-          "Yes"
+          "Add a feature where all the saved profiles would be visible to admin."
         ]
       },
       "acceptanceCriteria": [
-        "After a user saves a profile, performing a canister upgrade preserves that profile (the same principal can still retrieve it).",
-        "Admin-only profile visibility (as supported by existing backend methods) continues to work after an upgrade, and previously created profiles remain accessible."
+        "A new hook (e.g., useGetAllUserProfilesForAdmin) is added to frontend/src/hooks/useQueries.ts.",
+        "The hook is disabled when the actor is not available and handles authorization failures gracefully (no infinite retries).",
+        "The hook’s queryKey is stable and unique (e.g., ['adminUserProfiles'])."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Add an admin UI view that displays all saved user profiles to authenticated admins in the Admin Dashboard, including a searchable list and a detail view for a selected profile.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Add a feature where all the saved profiles would be visible to admin."
+        ]
+      },
+      "acceptanceCriteria": [
+        "When an admin is signed in (per existing isAdmin gating), the Admin Dashboard includes a new section/tab labeled \"Profiles\".",
+        "The Profiles view shows a list of saved profiles with at least: user name, email, and the user Principal (as text).",
+        "The list supports client-side search/filter (e.g., by name/email/principal substring).",
+        "Selecting a profile reveals the full profile details (gender, bestReads, welcomeMessageShown, and profile picture preview if present).",
+        "Non-admin users cannot access the Profiles view; they continue to see the existing AdminSignInPanel gating behavior."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo.",
-    "Use English for any user-facing text."
+    "Backend must remain a single-actor Motoko canister in backend/main.mo.",
+    "Do not edit any files under frontend/src/components/ui or any frontend immutable paths listed in SYSTEM_CONTEXT."
   ],
   "nonGoals": [
-    "Guaranteeing persistence across canister reinstall/delete actions (only across normal upgrades/redeploys).",
-    "Adding third-party databases or external storage providers."
+    "Do not add the ability for admins to edit or delete user profiles (view-only).",
+    "Do not add new authentication providers; keep existing Internet Identity + current admin check flow."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

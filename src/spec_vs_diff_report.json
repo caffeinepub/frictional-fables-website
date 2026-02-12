@@ -1,14 +1,51 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T22:44:39.035Z",
-  "summary": "Diff adds an upgrade-migration scaffold (new backend/migration.mo with an OldActor state containing books/assets, posts, notes, forum data, suggestions, admin notifications, and userProfiles) and wires it into backend/main.mo via Motoko’s `(with migration = Migration.run) actor { ... }` syntax. However, backend/main.mo is truncated, so the diff summary does not provide enough visible evidence to confirm that all relevant runtime state is actually stored in stable-compatible fields and preserved across upgrades as required.",
-  "missing_requirements": [],
-  "hallucinated_features": [],
-  "confidence": 0.55,
+  "generatedAt": "2026-02-12T06:18:52.924Z",
+  "summary": "Frontend adds an AdminProfilesPanel and a React Query hook to fetch all user profiles for admins, and wires the panel into the AdminDashboard page. However, the diff summary does not provide clear evidence that the required backend admin-only query method is implemented in backend/main.mo, nor that the Profiles view fully satisfies the detailed UI acceptance criteria (detail view fields, profile picture preview, and admin gating) due to truncation.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "Add a backend admin-only query in backend/main.mo that returns a list of all saved user profiles including the owning Principal and full UserProfile fields, trapping with an authorization error for non-admin callers, and not modifying state.",
+      "reason": "The frontend hook calls actor.getAllUserProfilesWithPrincipals(), but the provided backend/main.mo diff excerpt does not show any new public query method definition or admin-authorization check for it; content is truncated before any such method is visible.",
+      "evidence": [
+        "backend/main.mo",
+        "frontend/src/hooks/useQueries.ts"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Profiles view detail panel shows full profile details (gender, bestReads, welcomeMessageShown, and profile picture preview if present).",
+      "reason": "AdminProfilesPanel.tsx shows search/filtering and selection state, but the diff is truncated before showing the selected-profile detail rendering, including the required fields and profile picture preview.",
+      "evidence": [
+        "frontend/src/components/admin/AdminProfilesPanel.tsx"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Non-admin users cannot access the Profiles view and continue to see the existing AdminSignInPanel gating behavior.",
+      "reason": "AdminDashboardPage.tsx is truncated before showing the isAdmin gating logic and tab rendering; the diff excerpt only shows imports and state setup, not the conditional rendering that prevents non-admin access.",
+      "evidence": [
+        "frontend/src/pages/AdminDashboardPage.tsx"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Admin login credentials are defensively trimmed before calling the backend.",
+      "reason": "The BuildRequest does not ask for changes to admin login behavior; it only requests adding an admin-only profiles listing query, hook, and UI view.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts"
+      ]
+    }
+  ],
+  "confidence": 0.56,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/admin/AdminProfilesPanel.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/AdminDashboardPage.tsx",
     "project_state.json"
   ]
 }
